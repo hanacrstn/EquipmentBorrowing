@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using EquipmentBorrowing.Domain;
+﻿using EquipmentBorrowing.Domain;
 
 namespace EquipmentBorrowing.Application.Interfaces;
 
