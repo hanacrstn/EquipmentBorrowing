@@ -1,4 +1,5 @@
 # Equipment Borrowing System — Architecture Overview
+## PASQUIL & RAPAL - LAB 3Cx
 
 ## 1. Solution Structure
 - **Domain** – Core business concepts (Student, Equipment, Borrowing, BorrowingStatus) and the
