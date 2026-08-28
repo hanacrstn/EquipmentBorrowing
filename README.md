@@ -29,11 +29,11 @@ Domain and Application (it implements Application's interfaces). The composition
 
 ## III. Use Case Mapping
 
-Actor: Student
-Use Case: Borrow Equipment
-Application Service: BorrowEquipmentService
-Domain Objects Used: Student, Equipment, Borrowing, BorrowingStatus
-Repository Interfaces Used: IStudentRepository, IEquipmentRepository, IBorrowingRepository
+- Actor: Student
+- Use Case: Borrow Equipment 
+- Application Service: BorrowEquipmentService
+- Domain Objects Used: Student, Equipment, Borrowing, BorrowingStatus
+- Repository Interfaces Used: IStudentRepository, IEquipmentRepository, IBorrowingRepository
 Infrastructure Implementations Used: InMemoryStudentRepository, InMemoryEquipmentRepository,
 InMemoryBorrowingRepository
 
