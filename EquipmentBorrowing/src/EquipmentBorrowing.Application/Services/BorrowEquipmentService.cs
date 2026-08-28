@@ -55,7 +55,7 @@ public class BorrowEquipmentService
         equipment.MarkAsBorrowed();
         await _equipmentRepository.UpdateAsync(equipment, cancellationToken);
 
-        var borrowingId = new Random().Next(1000, 9999); // simple id generation for this in-memory activity
+        var borrowingId = Guid.NewGuid(); // guarantees a unique id without a repository round-trip
         var borrowing = new Borrowing(borrowingId, studentId, equipmentId, dateBorrowed, expectedReturnDate);
         await _borrowingRepository.AddAsync(borrowing, cancellationToken);
 

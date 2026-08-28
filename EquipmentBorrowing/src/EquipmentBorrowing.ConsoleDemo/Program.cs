@@ -23,23 +23,23 @@ Console.WriteLine("=== Borrow Equipment ===");
 Console.WriteLine("\n--- Case 1: Successful borrow ---");
 var success = await service.ExecuteAsync(studentId: 1, equipmentId: 100, today, dueDate);
 Console.WriteLine(success.Success
-    ? $"Approved. Borrowing #{success.BorrowingId} created."
+    ? $"Approved. Borrowing transaction #{success.BorrowingId} created."
     : $"Rejected: {success.Error}");
 
 Console.WriteLine("\n--- Case 2: Failure - equipment unavailable ---");
 var failUnavailable = await service.ExecuteAsync(studentId: 1, equipmentId: 101, today, dueDate);
 Console.WriteLine(failUnavailable.Success
-    ? $"Approved. Borrowing #{failUnavailable.BorrowingId} created."
+    ? $"Approved. Borrowing transaction #{failUnavailable.BorrowingId} created."
     : $"Rejected: {failUnavailable.Error}");
 
 Console.WriteLine("\n--- Case 3: Failure - student not allowed to borrow ---");
 var failNotAllowed = await service.ExecuteAsync(studentId: 2, equipmentId: 100, today, dueDate);
 Console.WriteLine(failNotAllowed.Success
-    ? $"Approved. Borrowing #{failNotAllowed.BorrowingId} created."
+    ? $"Approved. Borrowing transaction #{failNotAllowed.BorrowingId} created."
     : $"Rejected: {failNotAllowed.Error}");
 
 Console.WriteLine("\n--- Case 4: Failure - equipment does not exist ---");
 var failNotFound = await service.ExecuteAsync(studentId: 1, equipmentId: 999, today, dueDate);
 Console.WriteLine(failNotFound.Success
-    ? $"Approved. Borrowing #{failNotFound.BorrowingId} created."
+    ? $"Approved. Borrowing transaction #{failNotFound.BorrowingId} created."
     : $"Rejected: {failNotFound.Error}");

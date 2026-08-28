@@ -2,7 +2,7 @@
 
 public class Borrowing
 {
-    public int Id { get; }
+    public Guid Id { get; }
     public int StudentId { get; }
     public int EquipmentId { get; }
     public DateOnly DateBorrowed { get; }
@@ -10,7 +10,7 @@ public class Borrowing
     public BorrowingStatus Status { get; private set; }
 
     public Borrowing(
-        int id,
+        Guid id,
         int studentId,
         int equipmentId,
         DateOnly dateBorrowed,
