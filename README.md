@@ -2,14 +2,14 @@
 # By PASQUIL and RAPAL
 
 ## I. Solution Structure
-- **Domain** – Core business concepts (Student, Equipment, Borrowing, BorrowingStatus) and the
+- **Domain** - Core business concepts (Student, Equipment, Borrowing, BorrowingStatus) and the
   rules that belong to a single concept (ex. equipment cannot be marked borrowed twice).
-- **Application** – Use cases/orchestration (ex. BorrowEquipmentService) and the repository
+- **Application** - Use cases/orchestration (ex. BorrowEquipmentService) and the repository
   interfaces (contracts) the use cases depend on.
-- **Infrastructure** – Concrete, swappable implementations of those contracts. Currently
+- **Infrastructure** - Concrete, swappable implementations of those contracts. Currently
   in-memory; could become SQLite/PostgreSQL/file-based later without changing Domain or
   Application.
-- **Tests** – Automated verification of domain rules and application service behavior.
+- **Tests** - Automated verification of domain rules and application service behavior.
 
 ## II. Dependency Direction
 
@@ -72,13 +72,9 @@ PRE-DEVELOPMENT ANALYSIS
 
 &#x09;- The student expects the system to allow them to view available equipment, submit borrowing requests, track their active borrowings, and successfully return equipment.
 
-
-
 \-- Staff / Administrator (Assumption)
 
 &#x09;- To trust that the system enforces borrowing rules automatically (eligibility, availability, limits) without manual double-checking, and to see accurate equipment status.
-
-
 
 ##### B. USE CASES
 
@@ -93,8 +89,6 @@ PRE-DEVELOPMENT ANALYSIS
 |Expected Result|A new `Borrowing` record is created with status `Active`; equipment becomes unavailable|
 |Possible Failure|Equipment does not exist, equipment is unavailable, student is not allowed to borrow, or student has reached the maximum active borrowings|
 
-
-
 ###### UC-02: Return Equipment
 
 |ITEM|DESCRIPTION|
@@ -106,8 +100,6 @@ PRE-DEVELOPMENT ANALYSIS
 |Expected Result|Borrowing status changes to `Returned`; equipment becomes available again|
 |Possible Failure|No matching active borrowing found; equipment already marked returned|
 
-
-
 ###### UC-03: Find Available Equipment
 
 |ITEM|DESCRIPTION|
@@ -118,9 +110,6 @@ PRE-DEVELOPMENT ANALYSIS
 |Main Action|Student requests a list of equipment currently available for borrowing|
 |Expected Result|System returns the set of equipment whose status is available|
 |Possible Failure|No equipment currently available (empty result)|
-
-
-
 
 
 ##### C. DOMAIN CONCEPTS
@@ -142,27 +131,4 @@ PRE-DEVELOPMENT ANALYSIS
 1. **Must contain:** a reference to the student, a reference to the equipment, date borrowed, expected return date, and current status (`BorrowingStatus`).
 2. **Rules/state it owns:** its own lifecycle — e.g., a `MarkReturned()` method that can only transition `Active → Returned` (not the reverse).
 3. **Should not be responsible for:** checking whether the student was allowed to borrow in the first place, or updating the equipment's availability flag on its own initiative without being told to (that orchestration is the ***Application Service***<i>'s</i> job, because it needs to touch *two* objects — Equipment and Borrowing — which a single domain object shouldn't reach out and mutate on its own).
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   
-   
+4. 
