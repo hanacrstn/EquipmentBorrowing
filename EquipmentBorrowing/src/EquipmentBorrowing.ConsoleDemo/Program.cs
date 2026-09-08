@@ -2,7 +2,6 @@
 using EquipmentBorrowing.Domain;
 using EquipmentBorrowing.Infrastructure.Repositories;
 
-// --- Composition root: this is the ONLY place concrete classes are wired together ---
 var studentRepository = new InMemoryStudentRepository();
 var equipmentRepository = new InMemoryEquipmentRepository();
 var borrowingRepository = new InMemoryBorrowingRepository();

@@ -51,11 +51,11 @@ public class BorrowEquipmentService
         if (activeCount >= MaxActiveBorrowingsPerStudent)
             return BorrowingResult.Fail("Student has reached the maximum number of active borrowings.");
 
-        // Rule 6: All rules satisfied — create the borrowing record.
+        // Rule 6: All rules satisfied
         equipment.MarkAsBorrowed();
         await _equipmentRepository.UpdateAsync(equipment, cancellationToken);
 
-        var borrowingId = Guid.NewGuid(); // guarantees a unique id without a repository round-trip
+        var borrowingId = Guid.NewGuid();
         var borrowing = new Borrowing(borrowingId, studentId, equipmentId, dateBorrowed, expectedReturnDate);
         await _borrowingRepository.AddAsync(borrowing, cancellationToken);
 

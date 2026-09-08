@@ -19,4 +19,10 @@ public class InMemoryEquipmentRepository : IEquipmentRepository
     {
         return Task.CompletedTask;
     }
+
+    public Task<IReadOnlyList<Equipment>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<Equipment> all = _equipment.ToList();
+        return Task.FromResult(all);
+    }
 }
