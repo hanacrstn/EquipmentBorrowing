@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:EquipmentBorrowing.Desktop.ViewModels"
+             xmlns:domain="using:EquipmentBorrowing.Domain"
+             x:Class="EquipmentBorrowing.Desktop.Views.EquipmentView"
+             x:DataType="vm:EquipmentViewModel"
+             xmlns:conv="using:Avalonia.Data.Converters">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+        <TextBlock Grid.Row="0" Classes="Heading" Text="Equipment" />
+
+        <ListBox Grid.Row="1" ItemsSource="{Binding Equipment}" Margin="0,8,0,8">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="domain:Equipment">
+                    <Border Classes="Card" Padding="8" Margin="0,0,0,4">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Grid.Column="0" Text="{Binding Id}" Width="40" />
+                            <TextBlock Grid.Column="1" Text="{Binding Name}" />
+                            <TextBlock Grid.Column="2" Text="Available" IsVisible="{Binding IsAvailable}" />
+                            <TextBlock Grid.Column="2" Text="Borrowed"
+                                    IsVisible="{Binding IsAvailable, Converter={x:Static conv:BoolConverters.Not}}" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <TextBlock Grid.Row="2" Classes="StatusMessage" Text="{Binding StatusMessage}" />
+    </Grid>
+</UserControl>
