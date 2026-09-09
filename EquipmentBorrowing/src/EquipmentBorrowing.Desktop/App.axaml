@@ -3,7 +3,6 @@
              x:Class="EquipmentBorrowing.Desktop.App"
              xmlns:local="using:EquipmentBorrowing.Desktop"
              RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
         <local:ViewLocator />
