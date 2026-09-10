@@ -5,10 +5,21 @@
         x:DataType="vm:MainWindowViewModel"
         Title="Campus Equipment Borrowing System"
         Width="900" Height="600">
-    <Grid ColumnDefinitions="180,*">
-        <StackPanel Grid.Column="0" Spacing="4" Margin="8">
-            <Button Content="Equipment" Command="{Binding ShowEquipmentCommand}" />
-            <Button Content="Borrowings" Command="{Binding ShowBorrowingsCommand}" />
+    <Grid ColumnDefinitions="180,*" Margin="10">
+        <StackPanel Grid.Column="0"
+            Margin="59"
+            Spacing="4" 
+            HorizontalAlignment="Left" 
+            VerticalAlignment="Top">
+            <Button Content="Equipment" 
+                Command="{Binding ShowEquipmentCommand}" 
+                Width="140"
+                HorizontalContentAlignment="Center" />
+            
+            <Button Content="Borrowings" 
+                    Command="{Binding ShowBorrowingsCommand}" 
+                    Width="140"
+                    HorizontalContentAlignment="Center" />
         </StackPanel>
 
         <ContentControl Grid.Column="1" Content="{Binding CurrentView}" />
