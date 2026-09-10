@@ -1,53 +1,52 @@
-﻿using Avalonia.Controls.ApplicationLifetimes;
+﻿using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using EquipmentBorrowing.Application.Interfaces;
 using EquipmentBorrowing.Application.Services;
 using EquipmentBorrowing.Desktop.ViewModels;
 using EquipmentBorrowing.Desktop.Views;
 using EquipmentBorrowing.Domain;
 using EquipmentBorrowing.Infrastructure.Repositories;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EquipmentBorrowing.Desktop;
 
 public partial class App : Avalonia.Application
 {
-    public override void Initialize()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
+    public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
-    public override async void OnFrameworkInitializationCompleted()
+    public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var services = new ServiceCollection();
+
             var equipmentRepository = new InMemoryEquipmentRepository();
-            equipmentRepository.Seed(new Equipment(100, "Laptop"));
-            equipmentRepository.Seed(new Equipment(101, "Keyboard", isAvailable: false));
+            equipmentRepository.Seed(new Equipment(100, "Digital Multimeter"));
+            equipmentRepository.Seed(new Equipment(101, "Oscilloscope", isAvailable: false));
+            services.AddSingleton<IEquipmentRepository>(equipmentRepository);
 
             var studentRepository = new InMemoryStudentRepository();
-            studentRepository.Seed(new Student(1, "Keisha Montenegro"));
-            studentRepository.Seed(new Student(2, "Hannah Montana"));
+            studentRepository.Seed(new Student(1, "Juan Dela Cruz"));
+            studentRepository.Seed(new Student(2, "Maria Santos", isAllowedToBorrow: false));
+            services.AddSingleton<IStudentRepository>(studentRepository);
 
-            var borrowingRepository = new InMemoryBorrowingRepository();
+            services.AddSingleton<IBorrowingRepository, InMemoryBorrowingRepository>();
 
-            var borrowEquipmentService = new BorrowEquipmentService(
-                studentRepository, equipmentRepository, borrowingRepository);
+            services.AddTransient<BorrowEquipmentService>();
+            services.AddTransient<ReturnEquipmentService>();
 
-            var returnEquipmentService = new ReturnEquipmentService(
-                borrowingRepository, equipmentRepository);
+            services.AddTransient<EquipmentViewModel>();
+            services.AddTransient<BorrowingsViewModel>();
+            services.AddTransient<MainWindowViewModel>();
 
-            var equipmentViewModel = new EquipmentViewModel(
-                equipmentRepository, studentRepository, borrowEquipmentService);
+            var provider = services.BuildServiceProvider();
 
-            var borrowingsViewModel = new BorrowingsViewModel(
-                borrowingRepository, studentRepository, equipmentRepository, returnEquipmentService);
-
-            await equipmentViewModel.LoadCommand.ExecuteAsync(null);
-
-            var mainViewModel = new MainWindowViewModel(equipmentViewModel, borrowingsViewModel);
+            var mainWindowViewModel = provider.GetRequiredService<MainWindowViewModel>();
 
             desktop.MainWindow = new MainWindow
             {
-                DataContext = mainViewModel
+                DataContext = mainWindowViewModel
             };
         }
 
