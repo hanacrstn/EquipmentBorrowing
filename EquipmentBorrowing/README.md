@@ -1,6 +1,8 @@
 # Equipment Borrowing System — Architecture Overview
 ## PASQUIL & RAPAL - LAB 3Cx
 
+## LABORATORY ACTIVITY 1
+
 ## 1. Solution Structure
 - **Domain** – Core business concepts (Student, Equipment, Borrowing, BorrowingStatus) and the
   rules that belong to a single concept (e.g. equipment cannot be marked borrowed twice).
@@ -68,9 +70,90 @@ InMemoryBorrowingRepository
    BorrowEquipmentService.ExecuteAsync — everything else (Domain, repositories) exists only to
    support that one orchestrated operation.
 
-   -----
+   ----------
 
-   PRE-DEVELOPMENT ANALYSIS
+## LABORATORY ACTIVITY 2
+
+EquipmentBorrowing.Desktop is the presentation layer added on top of the Laboratory
+Activity 1 architecture. It contains Views (XAML), ViewModels, and the application's
+composition root (App.axaml.cs). It references Application and Infrastructure, but
+Domain and Application remain fully independent of Avalonia.Neither project
+references any Avalonia package.
+
+## Updated Architecture
+
+    Avalonia View
+          |
+          | Binding / Command
+          v
+      ViewModel
+          |
+          | Application Operation
+          v
+    Application Service
+          |
+          +---------> Domain
+          |
+          v
+    Repository Interface
+          ^
+          |
+    Infrastructure Implementation
+
+## Borrow Equipment Flow
+
+The user selects a student and equipment on the Equipment view and presses "Borrow
+Equipment." This triggers EquipmentViewModel's BorrowCommand, which collects the
+selected student, equipment, and return date and calls
+BorrowEquipmentService.ExecuteAsync; the same service built in Laboratory Activity 1,
+unmodified. The service checks all six borrowing rules against the repositories and
+returns a BorrowingResult. The ViewModel reads that result and updates StatusMessage
+and reloads the equipment list; it never evaluates the rules itself.
+
+## Return Equipment Flow
+
+The user selects an active borrowing on the Borrowings view and presses "Return
+Equipment." BorrowingsViewModel's ReturnCommand calls ReturnEquipmentService.ExecuteAsync
+with the selected borrowing's student and equipment ids. The service locates the active
+borrowing, marks it returned, marks the equipment available again, and persists both
+changes through their repositories. The ViewModel then reloads both the borrowings list
+and (indirectly, on next visit) the equipment list to reflect the updated state.
+
+## Architectural Reflection
+
+1. **Why should the View not call a repository directly?**
+   The View only knows how to display and collect data — it has no way to judge whether
+   an operation is valid. Calling a repository directly would let the interface bypass
+   every business rule the Application layer exists to enforce.
+
+2. **Why should business rules not be implemented in the ViewModel?**
+   The ViewModel's job is presentation state and coordination, not decision-making.
+   Rules living in two places (Application and ViewModel) would drift out of sync, and
+   any other future entry point (a web API, a different UI) would have to duplicate them.
+
+3. **What is the responsibility of the ViewModel?**
+   Holding presentation state, exposing observable properties and commands, performing
+   input-shape validation, and forwarding valid requests to Application services —
+   nothing more.
+
+4. **Why can the existing Application layer work without knowing Avalonia is being used?**
+   Application depends only on Domain and on its own repository interfaces, both of
+   which are UI-agnostic. Avalonia is a detail of how input is collected and results are
+   displayed, not a detail the business logic needs to know about.
+
+5. **What advantage comes from registering dependencies in one composition point?**
+   Every concrete implementation is chosen in exactly one place. Swapping in-memory
+   repositories for something else later means changing App.axaml.cs, not every
+   ViewModel that happens to use them.
+
+6. **If SQLite replaced the in-memory repository later, what stays unchanged?**
+   Every View, every ViewModel, and every Application service. Only the Infrastructure
+   project gains new repository implementations, and the composition root registers
+   those instead — the same story as Laboratory Activity 1's reflection answer #2.
+
+   ----------
+
+# PRE-DEVELOPMENT ANALYSIS
 
 ##### A. ACTORS
 
