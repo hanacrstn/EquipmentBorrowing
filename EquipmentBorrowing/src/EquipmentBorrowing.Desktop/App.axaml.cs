@@ -22,13 +22,13 @@ public partial class App : Avalonia.Application
             var services = new ServiceCollection();
 
             var equipmentRepository = new InMemoryEquipmentRepository();
-            equipmentRepository.Seed(new Equipment(100, "Digital Multimeter"));
-            equipmentRepository.Seed(new Equipment(101, "Oscilloscope", isAvailable: false));
+            equipmentRepository.Seed(new Equipment(100, "Keyboard"));
+            equipmentRepository.Seed(new Equipment(101, "Mouse", isAvailable: false));
             services.AddSingleton<IEquipmentRepository>(equipmentRepository);
 
             var studentRepository = new InMemoryStudentRepository();
-            studentRepository.Seed(new Student(1, "Juan Dela Cruz"));
-            studentRepository.Seed(new Student(2, "Maria Santos", isAllowedToBorrow: false));
+            studentRepository.Seed(new Student(1, "Keisha Montenegro"));
+            studentRepository.Seed(new Student(2, "Hannah Montana", isAllowedToBorrow: false));
             services.AddSingleton<IStudentRepository>(studentRepository);
 
             services.AddSingleton<IBorrowingRepository, InMemoryBorrowingRepository>();

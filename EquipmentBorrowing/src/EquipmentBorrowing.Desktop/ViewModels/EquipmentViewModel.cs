@@ -85,5 +85,11 @@ public partial class EquipmentViewModel : ViewModelBase
         {
             StatusMessage = $"Could not borrow: {result.Error}";
         }
+
+        if (ExpectedReturnDate.Date < DateTime.Today)
+        {
+            StatusMessage = "Expected return date cannot be in the past.";
+            return;
+        }
     }
 }
