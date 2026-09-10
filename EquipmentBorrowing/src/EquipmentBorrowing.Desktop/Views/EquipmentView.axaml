@@ -2,10 +2,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:EquipmentBorrowing.Desktop.ViewModels"
              xmlns:domain="using:EquipmentBorrowing.Domain"
+             xmlns:conv="using:Avalonia.Data.Converters"
              x:Class="EquipmentBorrowing.Desktop.Views.EquipmentView"
-             x:DataType="vm:EquipmentViewModel"
-             xmlns:conv="using:Avalonia.Data.Converters">
-    <Grid RowDefinitions="Auto,*,Auto" Margin="16">
+             x:DataType="vm:EquipmentViewModel">
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="16">
         <TextBlock Grid.Row="0" Classes="Heading" Text="Equipment" />
 
         <ListBox Grid.Row="1" ItemsSource="{Binding Equipment}" Margin="0,8,0,8">
@@ -17,13 +17,43 @@
                             <TextBlock Grid.Column="1" Text="{Binding Name}" />
                             <TextBlock Grid.Column="2" Text="Available" IsVisible="{Binding IsAvailable}" />
                             <TextBlock Grid.Column="2" Text="Borrowed"
-                                    IsVisible="{Binding IsAvailable, Converter={x:Static conv:BoolConverters.Not}}" />
+                                       IsVisible="{Binding IsAvailable, Converter={x:Static conv:BoolConverters.Not}}" />
                         </Grid>
                     </Border>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <TextBlock Grid.Row="2" Classes="StatusMessage" Text="{Binding StatusMessage}" />
+        <Border Grid.Row="2" Classes="Card" Padding="12" Margin="0,0,0,8">
+            <StackPanel Spacing="8">
+                <TextBlock Classes="SubHeading" Text="Borrow Equipment" />
+
+                <ComboBox ItemsSource="{Binding Students}"
+                          SelectedItem="{Binding SelectedStudent}"
+                          PlaceholderText="Select student">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <ComboBox ItemsSource="{Binding Equipment}"
+                          SelectedItem="{Binding SelectedEquipment}"
+                          PlaceholderText="Select equipment">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <DatePicker SelectedDate="{Binding ExpectedReturnDate}" />
+
+                <Button Classes="Primary" Content="Borrow Equipment" Command="{Binding BorrowCommand}" />
+            </StackPanel>
+        </Border>
+
+        <TextBlock Grid.Row="3" Classes="StatusMessage" Text="{Binding StatusMessage}" />
     </Grid>
 </UserControl>
