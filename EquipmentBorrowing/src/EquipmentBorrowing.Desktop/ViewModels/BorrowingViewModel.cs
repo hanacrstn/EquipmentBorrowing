@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EquipmentBorrowing.Application.Interfaces;
 using EquipmentBorrowing.Application.Services;
@@ -69,11 +69,14 @@ public partial class BorrowingsViewModel : ViewModelBase
         var result = await _returnEquipmentService.ExecuteAsync(
             SelectedBorrowing.StudentId, SelectedBorrowing.EquipmentId);
 
-        StatusMessage = result.Success
-            ? "Equipment returned."
-            : $"Could not return: {result.Error}";
-
         if (result.Success)
+        {
             await LoadAsync();
+            StatusMessage = "Equipment returned.";
+        }
+        else
+        {
+            StatusMessage = $"Could not return: {result.Error}";
+        }
     }
 }

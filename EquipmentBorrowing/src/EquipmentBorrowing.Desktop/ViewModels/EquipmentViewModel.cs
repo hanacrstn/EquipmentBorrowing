@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EquipmentBorrowing.Application;
 using EquipmentBorrowing.Application.Interfaces;
@@ -70,6 +70,12 @@ public partial class EquipmentViewModel : ViewModelBase
             return;
         }
 
+        if (ExpectedReturnDate.Date < DateTime.Today)
+        {
+            StatusMessage = "Expected return date cannot be in the past.";
+            return;
+        }
+
         var dateBorrowed = DateOnly.FromDateTime(DateTime.Today);
         var dueDate = DateOnly.FromDateTime(ExpectedReturnDate.Date);
 
@@ -84,12 +90,6 @@ public partial class EquipmentViewModel : ViewModelBase
         else
         {
             StatusMessage = $"Could not borrow: {result.Error}";
-        }
-
-        if (ExpectedReturnDate.Date < DateTime.Today)
-        {
-            StatusMessage = "Expected return date cannot be in the past.";
-            return;
         }
     }
 }
