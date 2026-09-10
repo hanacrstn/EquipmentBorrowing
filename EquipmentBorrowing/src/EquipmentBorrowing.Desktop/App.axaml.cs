@@ -24,21 +24,30 @@ public partial class App : Avalonia.Application
             equipmentRepository.Seed(new Equipment(101, "Keyboard", isAvailable: false));
 
             var studentRepository = new InMemoryStudentRepository();
-            studentRepository.Seed(new Student(1, "Wendell Aha"));
-            studentRepository.Seed(new Student(2, "Qin Qong", isAllowedToBorrow: false));
+            studentRepository.Seed(new Student(1, "Keisha Montenegro"));
+            studentRepository.Seed(new Student(2, "Hannah Montana"));
 
             var borrowingRepository = new InMemoryBorrowingRepository();
 
             var borrowEquipmentService = new BorrowEquipmentService(
                 studentRepository, equipmentRepository, borrowingRepository);
 
+            var returnEquipmentService = new ReturnEquipmentService(
+                borrowingRepository, equipmentRepository);
+
             var equipmentViewModel = new EquipmentViewModel(
                 equipmentRepository, studentRepository, borrowEquipmentService);
+
+            var borrowingsViewModel = new BorrowingsViewModel(
+                borrowingRepository, studentRepository, equipmentRepository, returnEquipmentService);
+
             await equipmentViewModel.LoadCommand.ExecuteAsync(null);
+
+            var mainViewModel = new MainWindowViewModel(equipmentViewModel, borrowingsViewModel);
 
             desktop.MainWindow = new MainWindow
             {
-                Content = new EquipmentView { DataContext = equipmentViewModel }
+                DataContext = mainViewModel
             };
         }
 
