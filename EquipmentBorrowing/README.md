@@ -1,5 +1,5 @@
 # Equipment Borrowing System — Architecture Overview
-## PASQUIL & RAPAL - LAB 3Cx
+## PASQUIL & RAPAL - LAB 3C
 
 ## LABORATORY ACTIVITY 1
 
