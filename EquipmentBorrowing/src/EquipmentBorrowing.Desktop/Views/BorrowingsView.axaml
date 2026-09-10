@@ -1,30 +1,41 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:EquipmentBorrowing.Desktop.ViewModels"
-             x:DataType="vm:BorrowingsViewModel"
-             x:Class="EquipmentBorrowing.Desktop.Views.BorrowingsView">
-    <Grid RowDefinitions="Auto,*,Auto,Auto" Margin="16">
+             xmlns:conv="using:Avalonia.Data.Converters"
+             x:Class="EquipmentBorrowing.Desktop.Views.BorrowingsView"
+             x:DataType="vm:BorrowingsViewModel">
+    <Grid RowDefinitions="Auto,*,Auto,Auto">
         <TextBlock Grid.Row="0" Classes="Heading" Text="Active Borrowings" />
 
-        <ListBox Grid.Row="1"
-                 ItemsSource="{Binding ActiveBorrowings}"
-                 SelectedItem="{Binding SelectedBorrowing}"
-                 Margin="0,8,0,8">
-            <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="vm:BorrowingDisplayItem">
-                    <Border Classes="Card" Padding="8" Margin="0,0,0,4">
-                        <Grid ColumnDefinitions="*,*,Auto">
-                            <TextBlock Grid.Column="0" Text="{Binding StudentName}" />
-                            <TextBlock Grid.Column="1" Text="{Binding EquipmentName}" />
-                            <TextBlock Grid.Column="2" Text="{Binding ExpectedReturnDate}" />
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+        <Border Grid.Row="1" Classes="Card">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" ColumnDefinitions="*,*,120" Margin="12,0,12,8">
+                    <TextBlock Grid.Column="0" Text="STUDENT" Classes="FieldLabel" />
+                    <TextBlock Grid.Column="1" Text="EQUIPMENT" Classes="FieldLabel" />
+                    <TextBlock Grid.Column="2" Text="DUE DATE" Classes="FieldLabel" HorizontalAlignment="Right" />
+                </Grid>
+
+                <ScrollViewer>
+                    <ListBox ItemsSource="{Binding ActiveBorrowings}"
+                             SelectedItem="{Binding SelectedBorrowing}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:BorrowingDisplayItem">
+                                <Grid ColumnDefinitions="*,*,120">
+                                    <TextBlock Grid.Column="0" Text="{Binding StudentName}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="{Binding EquipmentName}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2" Text="{Binding ExpectedReturnDate}"
+                                               HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
 
         <Button Grid.Row="2" Classes="Primary" Content="Return Equipment" Command="{Binding ReturnCommand}" />
 
-        <TextBlock Grid.Row="3" Classes="StatusMessage" Text="{Binding StatusMessage}" />
+        <TextBlock Grid.Row="3" Classes="StatusMessage" Text="{Binding StatusMessage}"
+                   IsVisible="{Binding StatusMessage, Converter={x:Static conv:ObjectConverters.IsNotNull}}" />
     </Grid>
 </UserControl>

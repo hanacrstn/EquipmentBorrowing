@@ -4,24 +4,18 @@
         x:Class="EquipmentBorrowing.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="Campus Equipment Borrowing System"
-        Width="900" Height="600">
-    <Grid ColumnDefinitions="180,*" Margin="10">
-        <StackPanel Grid.Column="0"
-            Margin="59"
-            Spacing="4" 
-            HorizontalAlignment="Left" 
-            VerticalAlignment="Top">
-            <Button Content="Equipment" 
-                Command="{Binding ShowEquipmentCommand}" 
-                Width="140"
-                HorizontalContentAlignment="Center" />
-            
-            <Button Content="Borrowings" 
-                    Command="{Binding ShowBorrowingsCommand}" 
-                    Width="140"
-                    HorizontalContentAlignment="Center" />
+        Width="1000" Height="650"
+        MinWidth="800" MinHeight="500">
+    <Grid ColumnDefinitions="220,*">
+        <StackPanel Grid.Column="0" Classes="NavPanel">
+            <TextBlock Text="CampusEquipment Borrowing" FontWeight="Bold" FontSize="16"
+                       Margin="16,20,16,24" TextWrapping="Wrap" />
+            <Button Classes="NavButton" Content="Equipment" Command="{Binding ShowEquipmentCommand}" />
+            <Button Classes="NavButton" Content="Active Borrowings" Command="{Binding ShowBorrowingsCommand}" />
         </StackPanel>
 
-        <ContentControl Grid.Column="1" Content="{Binding CurrentView}" />
+        <Border Grid.Column="1" Padding="24">
+            <ContentControl Content="{Binding CurrentView}" />
+        </Border>
     </Grid>
 </Window>
