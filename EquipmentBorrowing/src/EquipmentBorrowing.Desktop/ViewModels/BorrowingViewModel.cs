@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EquipmentBorrowing.Desktop.ViewModels;
 
-public partial class BorrowingsViewModel : ObservableObject
+public partial class BorrowingsViewModel : ViewModelBase
 {
     private readonly IBorrowingRepository _borrowingRepository;
     private readonly IStudentRepository _studentRepository;
