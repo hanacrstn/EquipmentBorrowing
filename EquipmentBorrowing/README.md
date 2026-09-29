@@ -163,21 +163,22 @@ and (indirectly, on next visit) the equipment list to reflect the updated state.
 
 ## LABORATORY ACTIVITY 3 DOCUMENTATION
 
-### STUDENTS
+### Schema
+#### STUDENTS
 | Column | Type | Constraints |
 |--------|------|-------------|
 | Id | TEXT (GUID) | PK |
 | Name | TEXT | NOT NULL |
 | IsAllowedToBorrow | INTEGER (bool) | NOT NULL |
 
-### EQUIPMENT
+#### EQUIPMENT
 | Column | Type | Constraints |
 |--------|------|-------------|
 | Id | TEXT (GUID) | PK |
 | Name | TEXT | NOT NULL |
 | IsAvailable | INTEGER (bool) | NOT NULL |
 
-### BORROWINGS
+#### BORROWINGS
 | Column | Type | Constraints |
 |--------|------|-------------|
 | Id | TEXT (GUID) | PK |
