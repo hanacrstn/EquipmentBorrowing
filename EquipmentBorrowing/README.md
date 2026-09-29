@@ -163,27 +163,29 @@ and (indirectly, on next visit) the equipment list to reflect the updated state.
 
 ## LABORATORY ACTIVITY 3 DOCUMENTATION
 
-### Schema
-STUDENTS
---------
-Id              TEXT (GUID)    PK
-Name            TEXT           NOT NULL
-IsAllowedToBorrow  INTEGER (bool)  NOT NULL
+### STUDENTS
+| Column | Type | Constraints |
+|--------|------|-------------|
+| Id | TEXT (GUID) | PK |
+| Name | TEXT | NOT NULL |
+| IsAllowedToBorrow | INTEGER (bool) | NOT NULL |
 
-EQUIPMENT
----------
-Id              TEXT (GUID)    PK
-Name            TEXT           NOT NULL
-IsAvailable     INTEGER (bool) NOT NULL
+### EQUIPMENT
+| Column | Type | Constraints |
+|--------|------|-------------|
+| Id | TEXT (GUID) | PK |
+| Name | TEXT | NOT NULL |
+| IsAvailable | INTEGER (bool) | NOT NULL |
 
-BORROWINGS
-----------
-Id                  TEXT (GUID)   PK
-StudentId           TEXT (GUID)   FK → STUDENTS.Id   NOT NULL
-EquipmentId         TEXT (GUID)   FK → EQUIPMENT.Id  NOT NULL
-DateBorrowed        TEXT (date)   NOT NULL
-ExpectedReturnDate  TEXT (date)   NOT NULL
-Status              INTEGER (enum as int)  NOT NULL
+### BORROWINGS
+| Column | Type | Constraints |
+|--------|------|-------------|
+| Id | TEXT (GUID) | PK |
+| StudentId | TEXT (GUID) | FK → STUDENTS.Id, NOT NULL |
+| EquipmentId | TEXT (GUID) | FK → EQUIPMENT.Id, NOT NULL |
+| DateBorrowed | TEXT (date) | NOT NULL |
+| ExpectedReturnDate | TEXT (date) | NOT NULL |
+| Status | INTEGER (enum as int) | NOT NULL |
 
 ### Normalization Check
 Normalization check (1NF -> 2NF -> 3NF)
