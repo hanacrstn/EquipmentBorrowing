@@ -1,9 +1,13 @@
 # Equipment Borrowing System — Architecture Overview
-## PASQUIL & RAPAL - LAB 3C
+# PASQUIL & RAPAL - LAB 3C
 
-## LABORATORY ACTIVITY 1
 
-## 1. Solution Structure
+----------
+
+
+## LABORATORY ACTIVITY 1 DOCUMENTATION
+
+### 1. Solution Structure
 - **Domain** – Core business concepts (Student, Equipment, Borrowing, BorrowingStatus) and the
   rules that belong to a single concept (e.g. equipment cannot be marked borrowed twice).
 - **Application** – Use cases/orchestration (e.g. BorrowEquipmentService) and the repository
@@ -19,7 +23,7 @@ started, and Equipment was completed end-to-end before Borrowing. BorrowEquipmen
 implemented last, as the point where all three domain concepts come together, rather than
 building every layer across all concepts before any of them worked.
 
-## 2. Dependency Direction
+### 2. Dependency Direction
 
     ConsoleDemo (composition root / future Avalonia UI)
               |
@@ -35,7 +39,7 @@ Domain depends on nothing. Application depends only on Domain. Infrastructure de
 Domain and Application (it implements Application's interfaces). The composition root
 (ConsoleDemo today, later the UI) is the only place that knows about Infrastructure directly.
 
-## 3. Use Case Mapping
+### 3. Use Case Mapping
 
 Actor: Student
 Use Case: Borrow Equipment
@@ -45,7 +49,7 @@ Repository Interfaces Used: IStudentRepository, IEquipmentRepository, IBorrowing
 Infrastructure Implementations Used: InMemoryStudentRepository, InMemoryEquipmentRepository,
 InMemoryBorrowingRepository
 
-## 4. Reflection
+### 4. Reflection
 
 1. **Why depend on a repository interface instead of a database implementation directly?**
    Because the service's job is business logic, not data access technology. Depending on an
@@ -70,9 +74,11 @@ InMemoryBorrowingRepository
    BorrowEquipmentService.ExecuteAsync — everything else (Domain, repositories) exists only to
    support that one orchestrated operation.
 
-   ----------
 
-## LABORATORY ACTIVITY 2
+----------
+
+
+## LABORATORY ACTIVITY 2 DOCUMENTATION
 
 EquipmentBorrowing.Desktop is the presentation layer added on top of the Laboratory
 Activity 1 architecture. It contains Views (XAML), ViewModels, and the application's
@@ -80,7 +86,7 @@ composition root (App.axaml.cs). It references Application and Infrastructure, b
 Domain and Application remain fully independent of Avalonia.Neither project
 references any Avalonia package.
 
-## Updated Architecture
+### Updated Architecture
 
     Avalonia View
           |
@@ -100,7 +106,7 @@ references any Avalonia package.
           |
     Infrastructure Implementation
 
-## Borrow Equipment Flow
+### Borrow Equipment Flow
 
 The user selects a student and equipment on the Equipment view and presses "Borrow
 Equipment." This triggers EquipmentViewModel's BorrowCommand, which collects the
@@ -110,7 +116,7 @@ unmodified. The service checks all six borrowing rules against the repositories 
 returns a BorrowingResult. The ViewModel reads that result and updates StatusMessage
 and reloads the equipment list; it never evaluates the rules itself.
 
-## Return Equipment Flow
+### Return Equipment Flow
 
 The user selects an active borrowing on the Borrowings view and presses "Return
 Equipment." BorrowingsViewModel's ReturnCommand calls ReturnEquipmentService.ExecuteAsync
@@ -119,7 +125,7 @@ borrowing, marks it returned, marks the equipment available again, and persists 
 changes through their repositories. The ViewModel then reloads both the borrowings list
 and (indirectly, on next visit) the equipment list to reflect the updated state.
 
-## Architectural Reflection
+### Architectural Reflection
 
 1. **Why should the View not call a repository directly?**
    The View only knows how to display and collect data — it has no way to judge whether
@@ -151,7 +157,82 @@ and (indirectly, on next visit) the equipment list to reflect the updated state.
    project gains new repository implementations, and the composition root registers
    those instead — the same story as Laboratory Activity 1's reflection answer #2.
 
+
    ----------
+
+
+## LABORATORY ACTIVITY 3 DOCUMENTATION
+
+### Schema
+
+|STUDENTS|
+|Id|TEXT (GUID)|PK|
+|Name|TEXT|NOT NULL|
+|IsAllowedToBorrow|INTEGER (bool)|NOT NULL|
+
+|EQUIPMENT|
+|-|-|-|
+|Id|TEXT (GUID)|PK|
+|Name|TEXT|NOT NULL|
+|IsAvailable|INTEGER (bool)|NOT NULL|
+
+|BORROWINGS|
+|Id|TEXT (GUID)|PK|
+|StudentId|TEXT (GUID)|FK → STUDENTS.Id|NOT NULL|
+|EquipmentId|TEXT (GUID)|FK → EQUIPMENT.Id|NOT NULL|
+|DateBorrowed|TEXT (date)|NOT NULL|
+|ExpectedReturnDate|TEXT (date)|NOT NULL|
+|Status|INTEGER (enum as int)|NOT NULL|
+
+### Normalization Check
+Normalization check (1NF -> 2NF -> 3NF)
+- **1NF** (atomic values, no repeating groups): every column above holds a
+  single atomic value - no comma-separated lists, no repeating equipment/student columns inside
+  Borrowings.
+- **2NF** (no partial dependency on a composite key): all three tables use a single-column
+  primary key (Id), so there's no composite key to have a partial dependency on.
+- **3NF** (no transitive dependency): in Borrowings, every non-key column (DateBorrowed,
+  ExpectedReturnDate, Status) describes the borrowing itself, not something reachable through
+  StudentId or EquipmentId (e.g., you are not storing the student's name or the equipment's name
+  inside Borrowings — those live only in STUDENTS/EQUIPMENT and are looked up through the foreign key).
+
+### Constraints and Indexes
+- StudentId and EquipmentId on BORROWINGS are foreign keys with NOT NULL. Every borrowing must
+  reference a real student and a real equipment item.
+- Add an index on BORROWINGS.Status — your app frequently filters WHERE Status = Active (via
+  GetAllActiveAsync), so this index speeds up that exact query pattern rather than being a speculative
+  "might help someday" index.
+- No unique constraints beyond the primary keys are needed — a student can have multiple borrowings 
+  (that's the whole point), and nothing else in this schema requires uniqueness.
+
+### Diagram
+```mermaid
+   erDiagram
+       STUDENTS ||--o{ BORROWINGS : "has"
+       EQUIPMENT ||--o{ BORROWINGS : "appears in"
+       STUDENTS {
+           text Id PK
+           text Name
+           integer IsAllowedToBorrow
+       }
+       EQUIPMENT {
+           text Id PK
+           text Name
+           integer IsAvailable
+       }
+       BORROWINGS {
+           text Id PK
+           text StudentId FK
+           text EquipmentId FK
+           text DateBorrowed
+           text ExpectedReturnDate
+           integer Status
+       }
+```
+
+
+-------
+
 
 # PRE-DEVELOPMENT ANALYSIS
 
