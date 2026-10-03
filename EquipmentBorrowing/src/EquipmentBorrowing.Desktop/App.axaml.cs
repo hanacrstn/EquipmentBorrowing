@@ -8,6 +8,8 @@ using EquipmentBorrowing.Infrastructure.Persistence;
 using EquipmentBorrowing.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using System;
 
 namespace EquipmentBorrowing.Desktop;
 
@@ -25,7 +27,8 @@ public partial class App : Avalonia.Application
             var services = new ServiceCollection();
 
             services.AddDbContextFactory<EquipmentBorrowingDbContext>(options =>
-                options.UseSqlite("Data Source=equipmentborrowing.db"));
+                options.UseSqlite("Data Source=equipmentborrowing.db")
+                       .LogTo(Console.WriteLine, LogLevel.Information));
 
             services.AddSingleton<IEquipmentRepository, EfEquipmentRepository>();
             services.AddSingleton<IStudentRepository, EfStudentRepository>();
