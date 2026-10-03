@@ -24,12 +24,12 @@ public partial class App : Avalonia.Application
         {
             var services = new ServiceCollection();
 
-            services.AddDbContext<EquipmentBorrowingDbContext>(options =>
+            services.AddDbContextFactory<EquipmentBorrowingDbContext>(options =>
                 options.UseSqlite("Data Source=equipmentborrowing.db"));
 
-            services.AddScoped<IEquipmentRepository, EfEquipmentRepository>();
-            services.AddScoped<IStudentRepository, EfStudentRepository>();
-            services.AddScoped<IBorrowingRepository, EfBorrowingRepository>();
+            services.AddSingleton<IEquipmentRepository, EfEquipmentRepository>();
+            services.AddSingleton<IStudentRepository, EfStudentRepository>();
+            services.AddSingleton<IBorrowingRepository, EfBorrowingRepository>();
 
             services.AddTransient<BorrowEquipmentService>();
             services.AddTransient<ReturnEquipmentService>();
@@ -40,11 +40,10 @@ public partial class App : Avalonia.Application
 
             var provider = services.BuildServiceProvider();
 
-            // Apply any pending migrations, then seed — both are idempotent,
-            // safe to run on every launch.
-            using (var scope = provider.CreateScope())
+
+            var contextFactory = provider.GetRequiredService<IDbContextFactory<EquipmentBorrowingDbContext>>();
+            await using (var context = await contextFactory.CreateDbContextAsync())
             {
-                var context = scope.ServiceProvider.GetRequiredService<EquipmentBorrowingDbContext>();
                 await context.Database.MigrateAsync();
                 await DatabaseSeeder.SeedAsync(context);
             }

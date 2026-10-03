@@ -7,25 +7,29 @@ namespace EquipmentBorrowing.Infrastructure.Repositories;
 
 public class EfStudentRepository : IStudentRepository
 {
-    private readonly EquipmentBorrowingDbContext _context;
+    private readonly IDbContextFactory<EquipmentBorrowingDbContext> _contextFactory;
 
-    public EfStudentRepository(EquipmentBorrowingDbContext context)
+    public EfStudentRepository(IDbContextFactory<EquipmentBorrowingDbContext> contextFactory)
     {
-        _context = context;
+        _contextFactory = contextFactory;
     }
 
     public async Task<Student?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        return await _context.Students.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        return await context.Students.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Student>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Students.AsNoTracking().ToListAsync(cancellationToken);
+        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        return await context.Students.AsNoTracking().ToListAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(Student student, CancellationToken cancellationToken = default)
     {
-        await _context.SaveChangesAsync(cancellationToken);
+        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        context.Students.Update(student);
+        await context.SaveChangesAsync(cancellationToken);
     }
 }

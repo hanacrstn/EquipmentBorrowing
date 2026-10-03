@@ -28,10 +28,14 @@ public class ReturnEquipmentService
             return new ReturnResult(false, "No active borrowing found for this student and equipment.");
 
         borrowing.MarkReturned();
+        await _borrowingRepository.UpdateAsync(borrowing, cancellationToken); // ← added
 
         var equipment = await _equipmentRepository.GetByIdAsync(equipmentId, cancellationToken);
         if (equipment is not null)
+        {
             equipment.MarkAsAvailable();
+            await _equipmentRepository.UpdateAsync(equipment, cancellationToken); // ← added
+        }
 
         return new ReturnResult(true, null);
     }
