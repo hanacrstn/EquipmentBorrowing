@@ -233,6 +233,119 @@ Normalization check (1NF -> 2NF -> 3NF)
            integer Status
        }
 ```
+      
+
+### SQLite and EF Core
+SQLite was added via the Microsoft.EntityFrameworkCore.Sqlite NuGet package on
+both the Infrastructure and Desktop projects. Entity Framework Core translates
+LINQ queries written against DbSet<T> properties into SQL executed against a
+local equipmentborrowing.db file.
+
+## DbContext
+EquipmentBorrowingDbContext exposes Students, Equipment, and Borrowings as
+DbSet<T> properties and applies every IEntityTypeConfiguration<T> in the
+Infrastructure project automatically via ApplyConfigurationsFromAssembly. It is
+constructed and owned entirely inside Infrastructure/Desktop's composition root
+— no View or ViewModel references it directly.
+
+## Repository Transition
+Each repository interface (IStudentRepository, IEquipmentRepository,
+IBorrowingRepository) gained an EF Core-backed implementation
+(EfStudentRepository, EfEquipmentRepository, EfBorrowingRepository) alongside
+the existing InMemory* implementations from Labs 1–2. Only the dependency
+injection registrations in App.axaml.cs changed to point at the new
+implementations — Domain, Application, and every View/ViewModel were
+untouched.
+
+## Migration Process
+The initial schema was created with:
+dotnet ef migrations add InitialCreate --project src/EquipmentBorrowing.Infrastructure --startup-project src/EquipmentBorrowing.Desktop
+and applied with:
+dotnet ef database update --project src/EquipmentBorrowing.Infrastructure --startup-project src/EquipmentBorrowing.Desktop
+The application also calls context.Database.MigrateAsync() at startup so any
+future migration is applied automatically without a manual step.
+
+## Generated SQL
+1. Query 1
+**Line Query:**
+_context.Equipment.AsNoTracking().Where(e => e.IsAvailable).ToListAsync();
+
+**Generated sql:**
+FROM "Equipment" AS "e"
+SELECT "e"."Id", "e"."IsAvailable", "e"."Name"
+WHERE "e"."IsAvailable"
+
+**Explanation:**
+Filters the Equipment table down to rows where IsAvailable is true,
+translating the LINQ .Where() clause directly into a SQL WHERE clause.
+
+2. Query 2
+**Line Query:**
+from b in _context.Borrowings.AsNoTracking()
+join s in _context.Students on b.StudentId equals s.Id
+join e in _context.Equipment on b.EquipmentId equals e.Id
+where b.Status == BorrowingStatus.Active
+select new { s.Name, EquipmentName = e.Name, b.DateBorrowed, b.ExpectedReturnDate }
+
+**Generated sql:**
+SELECT "s"."Name", "e"."Name", "b"."DateBorrowed", "b"."ExpectedReturnDate"
+FROM "Borrowings" AS "b"
+INNER JOIN "Students" AS "s" ON "b"."StudentId" = "s"."Id"
+INNER JOIN "Equipment" AS "e" ON "b"."EquipmentId" = "e"."Id"
+WHERE "b"."Status" = 0
+
+**Explanation:**
+Joins Borrowings to both Students and Equipment to pull in the related
+names in one round trip, and filters to only active borrowings (Status = 0,
+the integer value EF Core mapped BorrowingStatus.Active to via the
+HasConversion<int>() call in BorrowingConfiguration from Part F).
+
+## Persistence Demonstration
+
+Verified by borrowing an item, closing the application completely, reopening
+it, and confirming the borrowing and the equipment's unavailable status were
+still present — then repeating the same close/reopen check after returning the
+equipment.
+
+## Architectural Reflection
+
+1. **Why didn't the application need to be completely rewritten for SQLite?**
+   Because Domain and Application never depended on how data was stored —
+   only on the repository interfaces. Swapping the implementation behind those
+   interfaces is exactly what the abstraction was for.
+
+2. **Why should the ViewModel not use DbContext directly?**
+   The ViewModel's job is presentation state and coordination. If it used
+   DbContext directly, it would need to know SQL/EF Core concepts, would be
+   impossible to test without a real database, and business rules would have
+   nowhere principled to live.
+
+3. **What responsibility does the repository implementation now perform?**
+   Translating repository interface calls into EF Core LINQ queries and
+   SaveChangesAsync calls against the DbContext — the same responsibility the
+   InMemory repositories had (fulfilling the interface contract), just backed
+   by a real database instead of a List<T>.
+
+4. **What is the purpose of an EF Core migration?**
+   A reproducible, versioned record of how the database schema evolves, so the
+   schema can be recreated from source control rather than existing only as
+   whatever a developer happened to click together in a database tool.
+
+5. **Why are foreign keys important in the borrowing database?**
+   They guarantee a Borrowing can never reference a Student or Equipment that
+   doesn't exist, enforced by the database itself rather than relying on every
+   piece of application code to remember to check.
+
+6. **Why can a read-only query benefit from AsNoTracking()?**
+   EF Core skips maintaining change-tracking snapshots for entities that will
+   never be modified and saved back, which is faster and uses less memory for
+   pure display queries.
+
+7. **What would happen if SQLite were replaced by another provider later?**
+   Only the Infrastructure project's UseSqlite call and repository
+   implementations would need to change (to, say, UseNpgsql and new
+   Ef*Repository classes pointed at it) — Domain, Application, and the entire
+   Desktop UI would remain exactly as they are.
 
 
 -------
