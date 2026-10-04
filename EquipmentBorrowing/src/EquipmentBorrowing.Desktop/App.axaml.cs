@@ -28,7 +28,7 @@ public partial class App : Avalonia.Application
 
             services.AddDbContextFactory<EquipmentBorrowingDbContext>(options =>
                 options.UseSqlite("Data Source=equipmentborrowing.db")
-                       .LogTo(Console.WriteLine, LogLevel.Information));
+                       .LogTo(message => System.IO.File.AppendAllText("ef-core-log.txt", message + Environment.NewLine), LogLevel.Information));
 
             services.AddSingleton<IEquipmentRepository, EfEquipmentRepository>();
             services.AddSingleton<IStudentRepository, EfStudentRepository>();
