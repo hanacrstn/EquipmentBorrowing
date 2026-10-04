@@ -12,13 +12,13 @@
             <StackPanel Spacing="12">
                 <TextBlock Classes="SubHeading" Text="Borrow Equipment" />
 
-                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
-                    <StackPanel Grid.Column="0">
+                <WrapPanel ItemSpacing="12" LineSpacing="12">
+                    <StackPanel MinWidth="180">
                         <TextBlock Classes="FieldLabel" Text="STUDENT" />
                         <ComboBox ItemsSource="{Binding Students}"
                                   SelectedItem="{Binding SelectedStudent}"
                                   PlaceholderText="Select student"
-                                  HorizontalAlignment="Stretch">
+                                  Width="180">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Name}" />
@@ -27,12 +27,12 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="1">
+                    <StackPanel MinWidth="180">
                         <TextBlock Classes="FieldLabel" Text="EQUIPMENT" />
                         <ComboBox ItemsSource="{Binding Equipment}"
                                   SelectedItem="{Binding SelectedEquipment}"
                                   PlaceholderText="Select equipment"
-                                  HorizontalAlignment="Stretch">
+                                  Width="180">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Name}" />
@@ -41,11 +41,11 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="2">
+                    <StackPanel MinWidth="180">
                         <TextBlock Classes="FieldLabel" Text="RETURN BY" />
-                        <DatePicker SelectedDate="{Binding ExpectedReturnDate}" HorizontalAlignment="Stretch" />
+                        <DatePicker SelectedDate="{Binding ExpectedReturnDate}" Width="180" />
                     </StackPanel>
-                </Grid>
+                </WrapPanel>
 
                 <Button Classes="Primary" Content="Borrow Equipment" Command="{Binding BorrowCommand}" />
                 <TextBlock Classes="StatusMessage" Text="{Binding StatusMessage}"

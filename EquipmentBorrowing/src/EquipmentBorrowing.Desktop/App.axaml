@@ -71,6 +71,11 @@
             <Setter Property="Background" Value="#3E8BE6" />
         </Style>
 
+        <Style Selector="Button.Primary:disabled">
+            <Setter Property="Background" Value="#555555" />
+            <Setter Property="Foreground" Value="#AAAAAA" />
+        </Style>
+
         <Style Selector="ComboBox, DatePicker">
             <Setter Property="Margin" Value="0,0,0,4" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />

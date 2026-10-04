@@ -34,6 +34,11 @@ public partial class BorrowingsViewModel : ViewModelBase
     [ObservableProperty]
     private string? statusMessage;
 
+    partial void OnSelectedBorrowingChanged(BorrowingDisplayItem? value)
+    {
+        ReturnCommand.NotifyCanExecuteChanged();
+    }
+
     [RelayCommand]
     private async Task LoadAsync()
     {
@@ -57,7 +62,7 @@ public partial class BorrowingsViewModel : ViewModelBase
         StatusMessage = ActiveBorrowings.Count == 0 ? "No active borrowings." : null;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanReturn))]
     private async Task ReturnAsync()
     {
         if (SelectedBorrowing is null)
@@ -79,4 +84,6 @@ public partial class BorrowingsViewModel : ViewModelBase
             StatusMessage = $"Could not return: {result.Error}";
         }
     }
+
+    private bool CanReturn() => SelectedBorrowing is not null;
 }

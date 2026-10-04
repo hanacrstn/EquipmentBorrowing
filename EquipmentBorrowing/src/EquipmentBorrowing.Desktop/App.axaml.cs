@@ -49,7 +49,7 @@ public partial class App : Avalonia.Application
             {
                 await context.Database.MigrateAsync();
                 await DatabaseSeeder.SeedAsync(context);
-            }
+            }   
 
             var mainWindowViewModel = provider.GetRequiredService<MainWindowViewModel>();
 
