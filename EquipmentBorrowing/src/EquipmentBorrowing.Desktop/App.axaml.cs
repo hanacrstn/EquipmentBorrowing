@@ -1,62 +1,35 @@
 ﻿using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using EquipmentBorrowing.Application.Interfaces;
 using EquipmentBorrowing.Application.Services;
-using EquipmentBorrowing.Desktop.ViewModels;
-using EquipmentBorrowing.Desktop.Views;
 using EquipmentBorrowing.Infrastructure.Persistence;
 using EquipmentBorrowing.Infrastructure.Repositories;
-using Microsoft.EntityFrameworkCore;
+using EquipmentBorrowing.Desktop.ViewModels;
+using EquipmentBorrowing.Desktop.Views;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System;
 
 namespace EquipmentBorrowing.Desktop;
 
 public partial class App : Avalonia.Application
 {
-    public override void Initialize()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
+    public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
-    public override async void OnFrameworkInitializationCompleted()
+    public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var services = new ServiceCollection();
-
             services.AddDbContextFactory<EquipmentBorrowingDbContext>(options =>
-                options.UseSqlite("Data Source=equipmentborrowing.db")
-                       .LogTo(message => System.IO.File.AppendAllText("ef-core-log.txt", message + Environment.NewLine), LogLevel.Information));
-
-            services.AddSingleton<IEquipmentRepository, EfEquipmentRepository>();
-            services.AddSingleton<IStudentRepository, EfStudentRepository>();
-            services.AddSingleton<IBorrowingRepository, EfBorrowingRepository>();
-
-            services.AddTransient<BorrowEquipmentService>();
-            services.AddTransient<ReturnEquipmentService>();
-
-            services.AddTransient<EquipmentViewModel>();
-            services.AddTransient<BorrowingsViewModel>();
-            services.AddTransient<MainWindowViewModel>();
-
+                EquipmentBorrowingDbContextFactory.Configure(options));
+            services.AddSingleton<ILab4Repository, Lab4Repository>();
+            services.AddSingleton<Lab4Service>();
+            services.AddSingleton<Lab4ViewModel>();
             var provider = services.BuildServiceProvider();
+            desktop.Exit += (_, _) => provider.Dispose();
 
-
-            var contextFactory = provider.GetRequiredService<IDbContextFactory<EquipmentBorrowingDbContext>>();
-            await using (var context = await contextFactory.CreateDbContextAsync())
-            {
-                await context.Database.MigrateAsync();
-                await DatabaseSeeder.SeedAsync(context);
-            }   
-
-            var mainWindowViewModel = provider.GetRequiredService<MainWindowViewModel>();
-
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = mainWindowViewModel
-            };
+            var vm = provider.GetRequiredService<Lab4ViewModel>();
+            var window = new MainWindow { DataContext = vm };
+            window.Opened += async (_, _) => await vm.RefreshCommand.ExecuteAsync(null);
+            desktop.MainWindow = window;
         }
 
         base.OnFrameworkInitializationCompleted();
