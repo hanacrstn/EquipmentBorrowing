@@ -1,9 +1,4 @@
-# Equipment Borrowing System — Architecture Overview
-# PASQUIL & RAPAL - LAB 3C
-
-
-----------
-
+# Equipment Borrowing System
 
 ## LABORATORY ACTIVITY 1 DOCUMENTATION
 
@@ -348,7 +343,70 @@ equipment.
    Desktop UI would remain exactly as they are.
 
 
--------
+   ----------
+
+
+## Laboratory Activity 4 Documentation
+
+The Avalonia desktop app uses PostgreSQL for the equipment catalog, student and equipment management, single and batch checkout, returns, and borrowing search and history.
+
+### 1. Prerequisites
+
+- Windows, .NET 10 SDK, and Git. Visual Studio is optional when using the CLI.
+- Local PostgreSQL with the server running. pgAdmin can be used to create the database, inspect records, and collect evidence.
+- EF CLI 10.0.12. Run `dotnet ef --version`. For a fresh install, run `dotnet tool install --global dotnet-ef --version 10.0.12`. If an older global tool is installed, use `dotnet tool update --global dotnet-ef --version 10.0.12`.
+
+### 2. Configure the local database
+
+1. In pgAdmin, create a login role `lab4_app` with a local password and **Can login?** enabled. Create `equipment_borrowing_lab4` with that role as owner. The examples use localhost and port 5432.
+2. Open PowerShell in the folder with `EquipmentBorrowing.slnx`. Run this block and enter the role’s password when prompted. Keep passwords and configured connection strings out of Git and screenshots.
+
+```powershell
+$credential = Get-Credential -UserName lab4_app -Message 'Local PostgreSQL login'
+$builder = [System.Data.Common.DbConnectionStringBuilder]::new()
+$builder['Host'] = 'localhost'
+$builder['Port'] = 5432
+$builder['Database'] = 'equipment_borrowing_lab4'
+$builder['Username'] = $credential.UserName
+$builder['Password'] = $credential.GetNetworkCredential().Password
+$env:EQUIPMENT_BORROWING_DB = $builder.ConnectionString
+```
+
+3. Keep this terminal open for the remaining commands. Repeat the configuration in each new terminal that needs to run the app or EF CLI.
+
+### 3. Build, migrate, and run
+
+```powershell
+dotnet restore
+dotnet build
+dotnet ef database update --project src/EquipmentBorrowing.Infrastructure --startup-project src/EquipmentBorrowing.Desktop
+```
+
+1. In pgAdmin, refresh **Schemas → public → Tables** under `equipment_borrowing_lab4`. Confirm the three application tables and `__EFMigrationsHistory` are present.
+2. Optional initial data. Open a Query Tool on `equipment_borrowing_lab4` and run [lab4-seed.sql](docs/lab4-seed.sql). The script skips records whose normalized identifiers already exist. You can also register records in the app.
+3. Launch the app from the configured PowerShell terminal.
+
+```powershell
+dotnet run --project src/EquipmentBorrowing.Desktop/EquipmentBorrowing.Desktop.csproj
+```
+
+If the catalog shows a database load failure, confirm PostgreSQL is running, the details above match your local database, and `Test-Path Env:EQUIPMENT_BORROWING_DB` returns `True` in the launching terminal. Verify the existing rows in pgAdmin before changing setup or sample data.
+
+### 4. Architecture and integrity
+
+- **Layering** follows Avalonia View → MVVM ViewModel → `Lab4Service` → repository interfaces → `Lab4Repository` and EF Core → PostgreSQL. The ViewModels run commands and present status. Startup registers the context factory in `App.axaml.cs`.
+- **Context lifetime** uses a new asynchronously disposed context per repository read or write. The long-lived Desktop ViewModel and repository share a factory. Listing and history queries await database work.
+- **Writes** use a PostgreSQL transaction at read committed isolation and a transaction-scoped advisory lock for cooperating app writers. The service checks current eligibility, existing active loans and item availability under that boundary. A single commit persists all borrowings and equipment changes. If the commit acknowledgement may have been lost, refresh and inspect the records before retrying.
+- **Schema** uses `Students`, `Equipment` and `Borrowings`. Foreign keys preserve history, unique indexes protect normalized student and equipment IDs, and a partial unique index prevents two active loans for one physical item. The app limits each student to three active items in total.
+- **Availability and eligibility** are maintained through their use cases. New equipment is available, and new students start eligible. Returning a loan keeps its history.
+
+
+```powershell
+git log --graph --oneline --all
+```
+
+
+   ----------
 
 
 # PRE-DEVELOPMENT ANALYSIS
