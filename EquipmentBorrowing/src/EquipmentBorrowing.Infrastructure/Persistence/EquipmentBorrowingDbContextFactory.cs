@@ -3,12 +3,21 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace EquipmentBorrowing.Infrastructure.Persistence;
 
-public class EquipmentBorrowingDbContextFactory : IDesignTimeDbContextFactory<EquipmentBorrowingDbContext>
+public sealed class EquipmentBorrowingDbContextFactory
+    : IDesignTimeDbContextFactory<EquipmentBorrowingDbContext>
 {
+    public static void Configure(DbContextOptionsBuilder options)
+    {
+        var local = Environment.GetEnvironmentVariable("EQUIPMENT_BORROWING_DB");
+        options.UseNpgsql(string.IsNullOrWhiteSpace(local)
+            ? "Host=localhost;Database=equipment_borrowing_lab4;Username=lab4_app;Timeout=5"
+            : local);
+    }
+
     public EquipmentBorrowingDbContext CreateDbContext(string[] args)
     {
-        var optionsBuilder = new DbContextOptionsBuilder<EquipmentBorrowingDbContext>();
-        optionsBuilder.UseSqlite("Data Source=equipmentborrowing.db");
-        return new EquipmentBorrowingDbContext(optionsBuilder.Options);
+        var options = new DbContextOptionsBuilder<EquipmentBorrowingDbContext>();
+        Configure(options);
+        return new EquipmentBorrowingDbContext(options.Options);
     }
 }
