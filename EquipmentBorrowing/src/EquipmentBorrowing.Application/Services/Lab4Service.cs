@@ -12,7 +12,7 @@ public sealed partial class Lab4Service
         repository.EquipmentAsync(onlyAvailable);
 
     public Task<string> SaveStudentAsync(StudentRow? selected, string? numberInput,
-        string? nameInput, string? contactInput)
+        string? nameInput, string? contactInput, bool? allowed = null)
     {
         var number = Required(numberInput, "Student number");
         var name = Required(nameInput, "Full name");
@@ -29,7 +29,13 @@ public sealed partial class Lab4Service
             if (student is null)
                 session.AddStudent(new Student(number, name, contact));
             else
+            {
                 student.ChangeDetails(number, name, contact);
+                if (allowed is true)
+                    student.Reinstate();
+                else if (allowed is false)
+                    student.Suspend();
+            }
 
             return $"Saved student {number}.";
         });

@@ -17,9 +17,9 @@ public sealed partial class Lab4ViewModel
     public LoanSort[] SortOptions { get; } = Enum.GetValues<LoanSort>();
 
     [ObservableProperty] private StudentRow? borrower;
-    [ObservableProperty] private ItemRow? firstItem;
-    [ObservableProperty] private ItemRow? secondItem;
-    [ObservableProperty] private ItemRow? thirdItem;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(CanBorrowItemOne))] private ItemRow? firstItem;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(CanBorrowItemOne))] private ItemRow? secondItem;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(CanBorrowItemOne))] private ItemRow? thirdItem;
     [ObservableProperty] private DateTimeOffset? dueDate;
     [ObservableProperty] private IReadOnlyList<LoanRow> loans = Array.Empty<LoanRow>();
     [ObservableProperty] private LoanRow? selectedLoan;
@@ -31,6 +31,15 @@ public sealed partial class Lab4ViewModel
     [ObservableProperty] private string loanState = "";
     [ObservableProperty] private StudentRow? historyStudent;
     [ObservableProperty] private ItemRow? historyItem;
+
+    public bool CanBorrowItemOne => FirstItem is not null && SecondItem is null && ThirdItem is null;
+
+    public bool ShowSearchResult => currentLoans.StudentId is null && currentLoans.EquipmentId is null;
+    public bool ShowStudentResult => HistoryStudent is not null && currentLoans.StudentId == HistoryStudent.Id;
+    public bool ShowEquipmentResult => HistoryItem is not null && currentLoans.EquipmentId == HistoryItem.Id;
+
+    partial void OnHistoryStudentChanged(StudentRow? value) => OnPropertyChanged(nameof(ShowStudentResult));
+    partial void OnHistoryItemChanged(ItemRow? value) => OnPropertyChanged(nameof(ShowEquipmentResult));
 
     partial void OnSelectedLoanChanged(LoanRow? value) => ConfirmReturn = false;
 
@@ -115,6 +124,9 @@ public sealed partial class Lab4ViewModel
     private async Task ReloadLoansAsync(LoanCriteria criteria)
     {
         currentLoans = criteria;
+        OnPropertyChanged(nameof(ShowSearchResult));
+        OnPropertyChanged(nameof(ShowStudentResult));
+        OnPropertyChanged(nameof(ShowEquipmentResult));
         SelectedLoan = null;
         Loans = Array.Empty<LoanRow>();
         LoanState = $"{loanTitle} · Loading…";

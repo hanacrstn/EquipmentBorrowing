@@ -1,8 +1,6 @@
-﻿using Avalonia;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EquipmentBorrowing.Application.Services;
-using EquipmentBorrowing.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,6 +30,37 @@ public sealed partial class Lab4ViewModel : ObservableObject
     [ObservableProperty] private string feedback = "Select Refresh to load records.";
     [ObservableProperty] private string catalogState = "";
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowCatalog))]
+    [NotifyPropertyChangedFor(nameof(ShowStudents))]
+    [NotifyPropertyChangedFor(nameof(ShowEquipment))]
+    [NotifyPropertyChangedFor(nameof(ShowCheckout))]
+    [NotifyPropertyChangedFor(nameof(ShowBorrowings))]
+    private int sectionIndex;
+
+    public bool ShowCatalog => SectionIndex == 0;
+    public bool ShowStudents => SectionIndex == 1;
+    public bool ShowEquipment => SectionIndex == 2;
+    public bool ShowCheckout => SectionIndex == 3;
+    public bool ShowBorrowings => SectionIndex == 4;
+
+    public string[] CatalogFilters { get; } = { "All", "Available items only" };
+    public string[] EligibilityOptions { get; } = { "Eligible", "Restricted" };
+
+    public int CatalogFilterIndex
+    {
+        get => AvailableOnly ? 1 : 0;
+        set { if (value is 0 or 1) AvailableOnly = value == 1; }
+    }
+
+    public bool CanEditEligibility => SelectedStudent is not null;
+    public bool CanRegisterStudent => SelectedStudent is null;
+    [ObservableProperty] private int eligibilityIndex;
+    [ObservableProperty] private bool feedbackSuccess;
+    [ObservableProperty] private bool feedbackFailure;
+
+    partial void OnAvailableOnlyChanged(bool value) => OnPropertyChanged(nameof(CatalogFilterIndex));
+
     private bool needsRecovery;
 
     partial void OnSelectedStudentChanged(StudentRow? value)
@@ -39,6 +68,9 @@ public sealed partial class Lab4ViewModel : ObservableObject
         StudentNumber = value?.Number;
         StudentName = value?.Name;
         Contact = value?.Contact;
+        EligibilityIndex = value?.Allowed == false ? 1 : 0;
+        OnPropertyChanged(nameof(CanEditEligibility));
+        OnPropertyChanged(nameof(CanRegisterStudent));
     }
 
     partial void OnSelectedItemChanged(ItemRow? value)
@@ -69,7 +101,7 @@ public sealed partial class Lab4ViewModel : ObservableObject
     private Task UpdateStudentAsync() =>
         SaveAsync(() => service.SaveStudentAsync(
             SelectedStudent ?? throw new Lab4Problem("Select the student to update."),
-            StudentNumber, StudentName, Contact));
+            StudentNumber, StudentName, Contact, EligibilityIndex == 0));
     [RelayCommand]
     private Task PermitAsync() =>
         SaveAsync(() => service.SetEligibilityAsync(SelectedStudent, true));
@@ -151,6 +183,7 @@ public sealed partial class Lab4ViewModel : ObservableObject
         }
         catch (Lab4Problem ex)
         {
+            FeedbackFailure = true;
             return $"{message} Refresh failed: {ex.Message}";
         }
     });
@@ -165,9 +198,11 @@ public sealed partial class Lab4ViewModel : ObservableObject
         try
         {
             Feedback = await action();
+            FeedbackSuccess = !FeedbackFailure;
         }
         catch (Lab4Problem ex)
         {
+            FeedbackFailure = true;
             needsRecovery |= ex.Unknown;
             Feedback = ex.Message;
             if (ex.Refresh && !needsRecovery)

@@ -1,95 +1,352 @@
-﻿<Window xmlns="<https://github.com/avaloniaui>"
-    xmlns:x="<http://schemas.microsoft.com/winfx/2006/xaml>"
-    xmlns:vm="using:EquipmentBorrowing.Desktop.ViewModels"
-    x:Class="EquipmentBorrowing.Desktop.Views.MainWindow" x:DataType="vm:Lab4ViewModel"
-    Title="Campus Equipment Borrowing System" Width="1060" Height="820"
-    MinWidth="700" MinHeight="520">
-  <Grid RowDefinitions="Auto,*" Margin="16">
-    <StackPanel Spacing="6">
-      <Button Content="Refresh records and reconnect" Command="{Binding RefreshCommand}" />
-      <TextBlock Text="{Binding Feedback}" TextWrapping="Wrap" />
-      <ProgressBar IsVisible="{Binding Busy}" IsIndeterminate="True" Height="4" />
-    </StackPanel>
-    <TabControl Grid.Row="1" IsEnabled="{Binding !Busy}">
-      <TabItem Header="Catalog">
-        <ScrollViewer><StackPanel Spacing="8" Margin="10">
-          <CheckBox IsChecked="{Binding AvailableOnly}" Content="Available items only" />
-          <Button Content="Load catalog" Command="{Binding LoadCatalogCommand}" />
-          <TextBlock Text="{Binding CatalogState}" FontWeight="SemiBold" TextWrapping="Wrap" />
-          <ListBox ItemsSource="{Binding Catalog}" Height="390" />
-        </StackPanel></ScrollViewer>
-      </TabItem>
-      <TabItem Header="Students">
-        <ScrollViewer><StackPanel Spacing="8" Margin="10">
-          <ComboBox ItemsSource="{Binding Students}" SelectedItem="{Binding SelectedStudent}" PlaceholderText="Find a student by number or name" HorizontalAlignment="Stretch" />
-          <Button Content="Clear student form" Command="{Binding NewStudentCommand}" />
-          <TextBox Text="{Binding StudentNumber}" PlaceholderText="Institutional student number" />
-          <TextBox Text="{Binding StudentName}" PlaceholderText="Full name" />
-          <TextBox Text="{Binding Contact}" PlaceholderText="Optional contact" />
-          <WrapPanel Orientation="Horizontal" ItemHeight="36">
-            <Button Content="Register student" Command="{Binding RegisterStudentCommand}" />
-            <Button Content="Update selected student" Command="{Binding UpdateStudentCommand}" />
-            <Button Content="Permit borrowing" Command="{Binding PermitCommand}" />
-            <Button Content="Restrict borrowing" Command="{Binding RestrictCommand}" />
-          </WrapPanel>
-        </StackPanel></ScrollViewer>
-      </TabItem>
-      <TabItem Header="Equipment">
-        <ScrollViewer><StackPanel Spacing="8" Margin="10">
-          <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" PlaceholderText="Find an item by identifier or name" HorizontalAlignment="Stretch" />
-          <Button Content="Clear equipment form" Command="{Binding NewItemCommand}" />
-          <TextBox Text="{Binding ItemCode}" PlaceholderText="Equipment identifier" />
-          <TextBox Text="{Binding ItemName}" PlaceholderText="Equipment name" />
-          <TextBox Text="{Binding Description}" PlaceholderText="Optional description" />
-          <WrapPanel Orientation="Horizontal" ItemHeight="36">
-            <Button Content="Register equipment" Command="{Binding RegisterItemCommand}" />
+<Window xmlns="https://github.com/avaloniaui"
+xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+xmlns:vm="using:EquipmentBorrowing.Desktop.ViewModels"
+xmlns:svc="using:EquipmentBorrowing.Application.Services"
+x:Class="EquipmentBorrowing.Desktop.Views.MainWindow"
+x:DataType="vm:Lab4ViewModel"
+x:CompileBindings="True"
+Title="Campus Equipment Borrowing System"
+Width="1220" Height="850" MinWidth="950" MinHeight="660"
+Background="White" Foreground="#182536" RequestedThemeVariant="Light">
+    <Window.Resources>
+        <SolidColorBrush x:Key="SystemAccentColorBrush" Color="#BCE4FF"/>
+        <Color x:Key="SystemAccentColor">#6DB1E2</Color>
+    </Window.Resources>
+    <Window.Styles>
+        <Style Selector="Border.frame">
+            <Setter Property="CornerRadius" Value="9"/>
+            <Setter Property="BorderBrush" Value="#334556"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="Background" Value="White"/>
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="CornerRadius" Value="7"/>
+            <Setter Property="Padding" Value="13,8"/>
+            <Setter Property="MinHeight" Value="38"/>
+            <Setter Property="Background" Value="#DBF0FF"/>
+            <Setter Property="Foreground" Value="#183450"/>
+        </Style>
+        <Style Selector="TextBox, ComboBox, DatePicker">
+            <Setter Property="MinHeight" Value="39"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="Margin" Value="0"/>
+        </Style>
+        <Style Selector="ListBox.navigation ListBoxItem">
+            <Setter Property="FontSize" Value="17"/>
+            <Setter Property="MinHeight" Value="53"/>
+            <Setter Property="Padding" Value="15,10"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        </Style>
+        <Style Selector="ListBox.navigation ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="#DBF0FF"/>
+            <Setter Property="Foreground" Value="#173D5A"/>
+            <Setter Property="BorderBrush" Value="#5CA8DA"/>
+            <Setter Property="BorderThickness" Value="0,0,0,3"/>
+        </Style>
+        <Style Selector="TextBlock.sectionTitle">
+            <Setter Property="FontSize" Value="17"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="Border.tableHead">
+            <Setter Property="BorderThickness" Value="0,1.5"/>
+            <Setter Property="BorderBrush" Value="#334556"/>
+            <Setter Property="Background" Value="#F1F8FD"/>
+        </Style>
+        <Style Selector="Border.tableRow">
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="#DEE8EF"/>
+        </Style>
+        <Style Selector="TextBlock.cell, TextBlock.column">
+            <Setter Property="Margin" Value="10,9"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+        <Style Selector="TextBlock.column">
+            <Setter Property="FontStyle" Value="Italic"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+        </Style>
+        <Style Selector="ListBox.records ListBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="MinHeight" Value="39"/>
+        </Style>
+        <Style Selector="TextBlock.feedback">
+            <Setter Property="FontStyle" Value="Italic"/>
+            <Setter Property="Foreground" Value="#334556"/>
+        </Style>
+        <Style Selector="TextBlock.feedback.success">
+            <Setter Property="Foreground" Value="#147343"/>
+        </Style>
+        <Style Selector="TextBlock.feedback.failure">
+            <Setter Property="Foreground" Value="#B52632"/>
+        </Style>
+    </Window.Styles>
+    <Grid ColumnDefinitions="168,*" RowDefinitions="Auto,*,Auto" ColumnSpacing="22" RowSpacing="14" Margin="36,28">
+        <TextBlock Grid.ColumnSpan="2" Text="Campus Equipment Borrowing System" FontSize="27" FontWeight="Bold"/>
+        <Border Grid.Row="1" Classes="frame" Padding="12,13">
+            <ListBox Classes="navigation" SelectedIndex="{Binding SectionIndex, Mode=TwoWay}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBoxItem Content="Catalog"/>
+                <ListBoxItem Content="Students"/>
+                <ListBoxItem Content="Equipment"/>
+                <ListBoxItem Content="Checkout"/>
+                <ListBoxItem Content="Borrowings"/>
+            </ListBox>
+        </Border>
+        <Border Grid.Row="1" Grid.Column="1" Classes="frame" Padding="24,17" IsEnabled="{Binding !Busy}">
+            <Grid>
+                <Grid RowDefinitions="Auto,*" RowSpacing="11" IsVisible="{Binding ShowCatalog}">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+<TextBlock Classes="sectionTitle" Text="Catalog"/>
+<TextBlock Text="{Binding CatalogState}" VerticalAlignment="Center"/>
+</StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                            <ComboBox ItemsSource="{Binding CatalogFilters}" SelectedIndex="{Binding CatalogFilterIndex, Mode=TwoWay}" MinWidth="166"/>
+                            <Button Content="Load catalog" Command="{Binding LoadCatalogCommand}" />
+                        </StackPanel>
+                    </Grid>
+                    <Border Grid.Row="1"><Grid RowDefinitions="Auto,*">
+                    <Border Classes="tableHead">
+                        <Grid ColumnDefinitions="1*,2*,1.5*,2.6*">
+                            <TextBlock Grid.Column="0" Classes="column" Text="ID"></TextBlock>
+                            <TextBlock Grid.Column="1" Classes="column" Text="Item name"></TextBlock>
+                            <TextBlock Grid.Column="2" Classes="column" Text="Availability"></TextBlock>
+                            <TextBlock Grid.Column="3" Classes="column" Text="Description"></TextBlock>
+                        </Grid>
+                    </Border>
+                    <ListBox Grid.Row="1" Classes="records" ItemsSource="{Binding Catalog}"  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="svc:ItemRow">
+                                <Border Classes="tableRow">
+                                    <Grid ColumnDefinitions="1*,2*,1.5*,2.6*">
+                                        <TextBlock Grid.Column="0" Classes="cell" Text="{Binding Code}"></TextBlock>
+                                        <TextBlock Grid.Column="1" Classes="cell" Text="{Binding Name}"></TextBlock>
+                                        <StackPanel Grid.Column="2" Margin="10,9"><TextBlock IsVisible="{Binding Available}" Text="Available"/><TextBlock IsVisible="{Binding !Available}" Text="Unavailable"/></StackPanel>
+                                        <TextBlock Grid.Column="3" Classes="cell" Text="{Binding Description}"></TextBlock>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid></Border>
+            </Grid>
+            <Grid IsVisible="{Binding ShowStudents}" RowDefinitions="*,Auto" RowSpacing="16">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="9">
+                        <ComboBox ItemsSource="{Binding Students}" SelectedItem="{Binding SelectedStudent}" PlaceholderText="Find a student by number or name"/>
+                        <Border Height="8"/>
+                        <TextBox Text="{Binding StudentNumber}" PlaceholderText="Institutional student number"/>
+                        <TextBox Text="{Binding StudentName}" PlaceholderText="Full name"/>
+                        <TextBox Text="{Binding Contact}" PlaceholderText="Optional contact"/>
+                        <ComboBox ItemsSource="{Binding EligibilityOptions}" SelectedIndex="{Binding EligibilityIndex}" IsEnabled="{Binding CanEditEligibility}" AutomationProperties.Name="Eligibility"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12">
+                            <Button Content="Clear student form" Command="{Binding NewStudentCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+                <Border Grid.Row="1"><StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12">
+                <Button Content="Update selected student" Command="{Binding UpdateStudentCommand}" IsEnabled="{Binding CanEditEligibility}" />
+                <Button Content="Register student" Command="{Binding RegisterStudentCommand}" IsEnabled="{Binding CanRegisterStudent}" />
+            </StackPanel></Border>
+        </Grid>
+        <Grid IsVisible="{Binding ShowEquipment}" RowDefinitions="*,Auto" RowSpacing="16">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="9">
+                    <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" PlaceholderText="Find an item by identifier or name"/>
+                    <Border Height="8"/>
+                    <TextBox Text="{Binding ItemCode}" PlaceholderText="Equipment identifier"/>
+                    <TextBox Text="{Binding ItemName}" PlaceholderText="Equipment name"/>
+                    <TextBox Text="{Binding Description}" PlaceholderText="Optional description"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12">
+                        <Button Content="Clear equipment form" Command="{Binding NewItemCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+            <Border Grid.Row="1"><StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12">
             <Button Content="Update selected equipment" Command="{Binding UpdateItemCommand}" />
-          </WrapPanel>
-        </StackPanel></ScrollViewer>
-      </TabItem>
-      <TabItem Header="Checkout">
-        <ScrollViewer><StackPanel Spacing="8" Margin="10">
-          <ComboBox ItemsSource="{Binding Students}" SelectedItem="{Binding Borrower}" PlaceholderText="Choose borrower" HorizontalAlignment="Stretch" />
-          <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding FirstItem}" PlaceholderText="Item 1 · required for either checkout" HorizontalAlignment="Stretch" />
-          <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding SecondItem}" PlaceholderText="Item 2 · required for batch" HorizontalAlignment="Stretch" />
-          <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding ThirdItem}" PlaceholderText="Item 3 · optional for batch" HorizontalAlignment="Stretch" />
-          <TextBlock Text="Expected return date" FontWeight="SemiBold" TextWrapping="Wrap" />
-          <DatePicker SelectedDate="{Binding DueDate}" />
-          <WrapPanel Orientation="Horizontal" ItemHeight="36">
-            <Button Content="Borrow item 1" Command="{Binding IssueOneCommand}" />
-            <Button Content="Check out selected batch" Command="{Binding IssueBatchCommand}" />
-            <Button Content="Clear checkout" Command="{Binding ClearCheckoutCommand}" />
-          </WrapPanel>
-        </StackPanel></ScrollViewer>
-      </TabItem>
-      <TabItem Header="Borrowings">
-        <ScrollViewer><StackPanel Spacing="8" Margin="10">
-          <WrapPanel Orientation="Horizontal" ItemHeight="36">
-            <Button Content="Active borrowings" Command="{Binding ActiveLoansCommand}" />
-            <Button Content="Retry last list" Command="{Binding RetryLoansCommand}" />
-          </WrapPanel>
-          <TextBox Text="{Binding SearchText}" PlaceholderText="Search student name, student number or equipment name" />
-          <Grid ColumnDefinitions="Auto,*,Auto,*,Auto">
-            <TextBlock Text="Status" VerticalAlignment="Center" Margin="0,0,8,0" />
-            <ComboBox Grid.Column="1" ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding StatusFilter}" />
-            <TextBlock Grid.Column="2" Text="Sort by" VerticalAlignment="Center" Margin="0,0,8,0" />
-            <ComboBox Grid.Column="3" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SortField}" />
-            <CheckBox Grid.Column="4" IsChecked="{Binding Descending}" Content="Descending" />
-          </Grid>
-          <WrapPanel Orientation="Horizontal" ItemHeight="36">
-            <Button Content="Search borrowings" Command="{Binding SearchLoansCommand}" />
-            <Button Content="Clear filters" Command="{Binding ClearSearchCommand}" />
-          </WrapPanel>
-          <ComboBox ItemsSource="{Binding Students}" SelectedItem="{Binding HistoryStudent}" PlaceholderText="Select student for history" HorizontalAlignment="Stretch" />
-          <Button Content="Open student history" Command="{Binding StudentHistoryCommand}" />
-          <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding HistoryItem}" PlaceholderText="Select equipment for history" HorizontalAlignment="Stretch" />
-          <Button Content="Open equipment history" Command="{Binding EquipmentHistoryCommand}" />
-          <TextBlock Text="{Binding LoanState}" FontWeight="SemiBold" TextWrapping="Wrap" />
-          <ListBox ItemsSource="{Binding Loans}" Height="235" SelectedItem="{Binding SelectedLoan}" />
-          <CheckBox IsChecked="{Binding ConfirmReturn}" Content="Confirm return of the selected active loan" />
-          <Button Content="Return selected" Command="{Binding ReturnSelectedCommand}" />
-        </StackPanel></ScrollViewer>
-      </TabItem>
-    </TabControl>
-  </Grid>
+            <Button Content="Register equipment" Command="{Binding RegisterItemCommand}" />
+        </StackPanel></Border>
+    </Grid>
+    <Grid IsVisible="{Binding ShowCheckout}" RowDefinitions="*,Auto" RowSpacing="16">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="9">
+                <ComboBox ItemsSource="{Binding Students}" SelectedItem="{Binding Borrower}" PlaceholderText="Choose borrower"/>
+                <Border Height="8"/>
+                <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding FirstItem}" PlaceholderText="Item 1 · required for either checkout"/>
+                <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding SecondItem}" PlaceholderText="Item 2 · required for batch"/>
+                <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding ThirdItem}" PlaceholderText="Item 3 · optional for batch"/>
+                <Border Height="10"/>
+                <TextBlock Classes="sectionTitle" Text="Expected return date"/>
+                <DatePicker SelectedDate="{Binding DueDate}" HorizontalAlignment="Stretch"/>
+                <Border Height="6"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12">
+                    <Button Content="Clear checkout" Command="{Binding ClearCheckoutCommand}" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+        <Border Grid.Row="1"><StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12">
+        <Button Content="Borrow item 1" Command="{Binding IssueOneCommand}" IsEnabled="{Binding CanBorrowItemOne}" />
+        <Button Content="Check out selected batch" Command="{Binding IssueBatchCommand}" />
+    </StackPanel></Border>
+</Grid>
+<TabControl IsVisible="{Binding ShowBorrowings}" Padding="0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+    <TabItem Header="Search borrowings">
+        <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="16">
+            <StackPanel Spacing="9">
+                <TextBox Text="{Binding SearchText}" PlaceholderText="Search student name, student number or equipment name"/>
+                <Grid ColumnDefinitions="Auto,*,Auto,*,Auto" ColumnSpacing="10">
+                    <TextBlock Text="Status" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding StatusFilter}"/>
+                    <TextBlock Grid.Column="2" Text="Sort by" VerticalAlignment="Center"/>
+                    <ComboBox Grid.Column="3" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SortField}"/>
+                    <CheckBox Grid.Column="4" Content="Descending" IsChecked="{Binding Descending}"/>
+                </Grid>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12">
+                    <Button Content="Active borrowings" Command="{Binding ActiveLoansCommand}" />
+                    <Button Content="Retry last list" Command="{Binding RetryLoansCommand}" />
+                    <Button Content="Search borrowings" Command="{Binding SearchLoansCommand}" />
+                    <Button Content="Clear filters" Command="{Binding ClearSearchCommand}" />
+                </StackPanel>
+            </StackPanel>
+            <TextBlock Grid.Row="1" Classes="sectionTitle" Text="{Binding LoanState}" IsVisible="{Binding ShowSearchResult}"/>
+            <Border Grid.Row="2" IsVisible="{Binding ShowSearchResult}"><Grid RowDefinitions="Auto,*">
+            <Border Classes="tableHead">
+                <Grid ColumnDefinitions="1*,1.5*,1.8*,1.15*,1.15*,1.15*">
+                    <TextBlock Grid.Column="0" Classes="column" Text="ID"></TextBlock>
+                    <TextBlock Grid.Column="1" Classes="column" Text="Name"></TextBlock>
+                    <TextBlock Grid.Column="2" Classes="column" Text="Borrowed equipment"></TextBlock>
+                    <TextBlock Grid.Column="3" Classes="column" Text="Borrow date"></TextBlock>
+                    <TextBlock Grid.Column="4" Classes="column" Text="Due date"></TextBlock>
+                    <TextBlock Grid.Column="5" Classes="column" Text="Returned date"></TextBlock>
+                </Grid>
+            </Border>
+            <ListBox Grid.Row="1" Classes="records" ItemsSource="{Binding Loans}" SelectedItem="{Binding SelectedLoan}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="svc:LoanRow">
+                        <Border Classes="tableRow">
+                            <Grid ColumnDefinitions="1*,1.5*,1.8*,1.15*,1.15*,1.15*">
+                                <TextBlock Grid.Column="0" Classes="cell" Text="{Binding Number}"></TextBlock>
+                                <TextBlock Grid.Column="1" Classes="cell" Text="{Binding Student}"></TextBlock>
+                                <TextBlock Grid.Column="2" Classes="cell" Text="{Binding Item}"></TextBlock>
+                                <TextBlock Grid.Column="3" Classes="cell" Text="{Binding Checkout, StringFormat='{}{0:yyyy-MM-dd}'}"></TextBlock>
+                                <TextBlock Grid.Column="4" Classes="cell" Text="{Binding Due, StringFormat='{}{0:yyyy-MM-dd}'}"></TextBlock>
+                                <TextBlock Grid.Column="5" Classes="cell" Text="{Binding Returned, StringFormat='{}{0:yyyy-MM-dd}', TargetNullValue=-}"></TextBlock>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid></Border>
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+            <CheckBox Content="Confirm return of the selected active loan" IsChecked="{Binding ConfirmReturn}"/>
+            <Button Content="Return selected" Command="{Binding ReturnSelectedCommand}" Grid.Column="1" />
+        </Grid>
+    </Grid>
+</TabItem>
+<TabItem Header="Student history">
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="15">
+        <StackPanel Spacing="9">
+            <ComboBox ItemsSource="{Binding Students}" SelectedItem="{Binding HistoryStudent}" PlaceholderText="Select student for history"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12">
+                <Button Content="Open student history" Command="{Binding StudentHistoryCommand}" />
+            </StackPanel>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Margin="0,30,0,0" IsVisible="{Binding ShowStudentResult}">
+<TextBlock Classes="sectionTitle" Text="{Binding LoanState}"/>
+<Border Classes="tableHead" Margin="0,7,0,0"><Grid ColumnDefinitions="1*,3*,1.5*">
+<TextBlock Classes="column" Text="ID"/><TextBlock Grid.Column="1" Classes="column" Text="Name"/><TextBlock Grid.Column="2" Classes="column" Text="Eligibility"/>
+</Grid></Border><Border Classes="tableRow"><Grid ColumnDefinitions="1*,3*,1.5*">
+<TextBlock Classes="cell" Text="{Binding HistoryStudent?.Number}"/><TextBlock Grid.Column="1" Classes="cell" Text="{Binding HistoryStudent?.Name}"/>
+<StackPanel Grid.Column="2" Margin="10,9"><TextBlock IsVisible="{Binding HistoryStudent?.Allowed}" Text="Eligible"/><TextBlock IsVisible="{Binding !HistoryStudent?.Allowed}" Text="Restricted"/></StackPanel>
+</Grid></Border>
+
+        </StackPanel>
+        <Border Grid.Row="2" IsVisible="{Binding ShowStudentResult}"><Grid RowDefinitions="Auto,*">
+        <Border Classes="tableHead">
+            <Grid ColumnDefinitions="1*,1.5*,1.8*,1.15*,1.15*,1.15*">
+                <TextBlock Grid.Column="0" Classes="column" Text="ID"></TextBlock>
+                <TextBlock Grid.Column="1" Classes="column" Text="Name"></TextBlock>
+                <TextBlock Grid.Column="2" Classes="column" Text="Borrowed equipment"></TextBlock>
+                <TextBlock Grid.Column="3" Classes="column" Text="Borrow date"></TextBlock>
+                <TextBlock Grid.Column="4" Classes="column" Text="Due date"></TextBlock>
+                <TextBlock Grid.Column="5" Classes="column" Text="Returned date"></TextBlock>
+            </Grid>
+        </Border>
+        <ListBox Grid.Row="1" Classes="records" ItemsSource="{Binding Loans}" SelectionMode="Single" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="svc:LoanRow">
+                    <Border Classes="tableRow">
+                        <Grid ColumnDefinitions="1*,1.5*,1.8*,1.15*,1.15*,1.15*">
+                            <TextBlock Grid.Column="0" Classes="cell" Text="{Binding Number}"></TextBlock>
+                            <TextBlock Grid.Column="1" Classes="cell" Text="{Binding Student}"></TextBlock>
+                            <TextBlock Grid.Column="2" Classes="cell" Text="{Binding Item}"></TextBlock>
+                            <TextBlock Grid.Column="3" Classes="cell" Text="{Binding Checkout, StringFormat='{}{0:yyyy-MM-dd}'}"></TextBlock>
+                            <TextBlock Grid.Column="4" Classes="cell" Text="{Binding Due, StringFormat='{}{0:yyyy-MM-dd}'}"></TextBlock>
+                            <TextBlock Grid.Column="5" Classes="cell" Text="{Binding Returned, StringFormat='{}{0:yyyy-MM-dd}', TargetNullValue=-}"></TextBlock>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid></Border>
+</Grid>
+</TabItem>
+<TabItem Header="Equipment history">
+<Grid RowDefinitions="Auto,Auto,*" RowSpacing="15">
+    <StackPanel Spacing="9">
+        <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding HistoryItem}" PlaceholderText="Select equipment for history"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12">
+            <Button Content="Open equipment history" Command="{Binding EquipmentHistoryCommand}" />
+        </StackPanel>
+    </StackPanel>
+    <StackPanel Grid.Row="1" Margin="0,30,0,0" IsVisible="{Binding ShowEquipmentResult}">
+<TextBlock Classes="sectionTitle" Text="{Binding LoanState}"/>
+<Border Classes="tableHead" Margin="0,7,0,0"><Grid ColumnDefinitions="1*,3*,1.5*">
+<TextBlock Classes="column" Text="ID"/><TextBlock Grid.Column="1" Classes="column" Text="Name"/><TextBlock Grid.Column="2" Classes="column" Text="Availability"/>
+</Grid></Border><Border Classes="tableRow"><Grid ColumnDefinitions="1*,3*,1.5*">
+<TextBlock Classes="cell" Text="{Binding HistoryItem?.Code}"/><TextBlock Grid.Column="1" Classes="cell" Text="{Binding HistoryItem?.Name}"/>
+<StackPanel Grid.Column="2" Margin="10,9"><TextBlock IsVisible="{Binding HistoryItem?.Available}" Text="Available"/><TextBlock IsVisible="{Binding !HistoryItem?.Available}" Text="Unavailable"/></StackPanel>
+</Grid></Border>
+
+    </StackPanel>
+    <Border Grid.Row="2" IsVisible="{Binding ShowEquipmentResult}"><Grid RowDefinitions="Auto,*">
+    <Border Classes="tableHead">
+        <Grid ColumnDefinitions="1*,1.5*,1.8*,1.15*,1.15*,1.15*">
+            <TextBlock Grid.Column="0" Classes="column" Text="ID"></TextBlock>
+            <TextBlock Grid.Column="1" Classes="column" Text="Name"></TextBlock>
+            <TextBlock Grid.Column="2" Classes="column" Text="Borrowed equipment"></TextBlock>
+            <TextBlock Grid.Column="3" Classes="column" Text="Borrow date"></TextBlock>
+            <TextBlock Grid.Column="4" Classes="column" Text="Due date"></TextBlock>
+            <TextBlock Grid.Column="5" Classes="column" Text="Returned date"></TextBlock>
+        </Grid>
+    </Border>
+    <ListBox Grid.Row="1" Classes="records" ItemsSource="{Binding Loans}" SelectionMode="Single" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+        <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="svc:LoanRow">
+                <Border Classes="tableRow">
+                    <Grid ColumnDefinitions="1*,1.5*,1.8*,1.15*,1.15*,1.15*">
+                        <TextBlock Grid.Column="0" Classes="cell" Text="{Binding Number}"></TextBlock>
+                        <TextBlock Grid.Column="1" Classes="cell" Text="{Binding Student}"></TextBlock>
+                        <TextBlock Grid.Column="2" Classes="cell" Text="{Binding Item}"></TextBlock>
+                        <TextBlock Grid.Column="3" Classes="cell" Text="{Binding Checkout, StringFormat='{}{0:yyyy-MM-dd}'}"></TextBlock>
+                        <TextBlock Grid.Column="4" Classes="cell" Text="{Binding Due, StringFormat='{}{0:yyyy-MM-dd}'}"></TextBlock>
+                        <TextBlock Grid.Column="5" Classes="cell" Text="{Binding Returned, StringFormat='{}{0:yyyy-MM-dd}', TargetNullValue=-}"></TextBlock>
+                    </Grid>
+                </Border>
+            </DataTemplate>
+        </ListBox.ItemTemplate>
+    </ListBox>
+</Grid></Border>
+</Grid>
+</TabItem>
+</TabControl>
+</Grid>
+</Border>
+<Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="16">
+<TextBlock Classes="feedback" Classes.success="{Binding FeedbackSuccess}" Classes.failure="{Binding FeedbackFailure}" Text="{Binding Feedback}" TextWrapping="Wrap" VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite"/>
+<Button Content="Refresh records and reconnect" Command="{Binding RefreshCommand}" Grid.Column="1" />
+<ProgressBar Grid.Row="1" Grid.ColumnSpan="2" Height="3" Margin="0,5,0,0" IsVisible="{Binding Busy}" IsIndeterminate="True"/>
+</Grid>
+</Grid>
 </Window>
