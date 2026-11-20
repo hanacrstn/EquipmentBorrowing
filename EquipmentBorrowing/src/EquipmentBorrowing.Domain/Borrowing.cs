@@ -2,11 +2,13 @@
 
 public class Borrowing
 {
-    public Guid Id { get; }
-    public int StudentId { get; }
-    public int EquipmentId { get; }
-    public DateOnly DateBorrowed { get; }
-    public DateOnly ExpectedReturnDate { get; }
+    private Borrowing() { }
+
+    public Guid Id { get; private set; }
+    public int StudentId { get; private set; }
+    public int EquipmentId { get; private set; }
+    public DateOnly DateBorrowed { get; private set; }
+    public DateOnly ExpectedReturnDate { get; private set; }
     public BorrowingStatus Status { get; private set; }
 
     public Borrowing(
@@ -16,8 +18,8 @@ public class Borrowing
         DateOnly dateBorrowed,
         DateOnly expectedReturnDate)
     {
-        if (expectedReturnDate < dateBorrowed)
-            throw new ArgumentException("Expected return date cannot be before the borrow date.");
+        if (expectedReturnDate <= dateBorrowed)
+            throw new ArgumentException("Expected return must be later than checkout.");
 
         Id = id;
         StudentId = studentId;
@@ -27,11 +29,18 @@ public class Borrowing
         Status = BorrowingStatus.Active;
     }
 
-    public void MarkReturned()
-    {
-        if (Status == BorrowingStatus.Returned)
-            throw new InvalidOperationException("Borrowing is already marked as returned.");
+    public DateOnly? ActualReturnDate { get; private set; }
 
+    public void MarkReturned() => MarkReturned(DateOnly.FromDateTime(DateTime.Today));
+
+    public void MarkReturned(DateOnly date)
+    {
+        if (Status != BorrowingStatus.Active)
+            throw new InvalidOperationException("This borrowing was already returned.");
+        if (date < DateBorrowed)
+            throw new ArgumentException("Actual return cannot precede checkout.", nameof(date));
+
+        ActualReturnDate = date;
         Status = BorrowingStatus.Returned;
     }
 }
