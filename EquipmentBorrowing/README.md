@@ -1,4 +1,7 @@
 # Equipment Borrowing System
+### Pair:
+2024301733 - Pasquil, Wendell Hope C
+2024300570 -  Rapal, Hannah Christine C.
 
 ## LABORATORY ACTIVITY 1 DOCUMENTATION
 
