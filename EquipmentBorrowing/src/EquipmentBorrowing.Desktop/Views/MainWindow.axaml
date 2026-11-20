@@ -1,21 +1,95 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:EquipmentBorrowing.Desktop.ViewModels"
-        x:Class="EquipmentBorrowing.Desktop.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
-        Title="Campus Equipment Borrowing System"
-        Width="1000" Height="650"
-        MinWidth="800" MinHeight="500">
-    <Grid ColumnDefinitions="220,*">
-        <StackPanel Grid.Column="0" Classes="NavPanel">
-            <TextBlock Text="CampusEquipment Borrowing" FontWeight="Bold" FontSize="16"
-                       Margin="16,20,16,24" TextWrapping="Wrap" />
-            <Button Classes="NavButton" Content="Equipment" Command="{Binding ShowEquipmentCommand}" />
-            <Button Classes="NavButton" Content="Active Borrowings" Command="{Binding ShowBorrowingsCommand}" />
-        </StackPanel>
-
-        <Border Grid.Column="1" Padding="24">
-            <ContentControl Content="{Binding CurrentView}" />
-        </Border>
-    </Grid>
+﻿<Window xmlns="<https://github.com/avaloniaui>"
+    xmlns:x="<http://schemas.microsoft.com/winfx/2006/xaml>"
+    xmlns:vm="using:EquipmentBorrowing.Desktop.ViewModels"
+    x:Class="EquipmentBorrowing.Desktop.Views.MainWindow" x:DataType="vm:Lab4ViewModel"
+    Title="Campus Equipment Borrowing System" Width="1060" Height="820"
+    MinWidth="700" MinHeight="520">
+  <Grid RowDefinitions="Auto,*" Margin="16">
+    <StackPanel Spacing="6">
+      <Button Content="Refresh records and reconnect" Command="{Binding RefreshCommand}" />
+      <TextBlock Text="{Binding Feedback}" TextWrapping="Wrap" />
+      <ProgressBar IsVisible="{Binding Busy}" IsIndeterminate="True" Height="4" />
+    </StackPanel>
+    <TabControl Grid.Row="1" IsEnabled="{Binding !Busy}">
+      <TabItem Header="Catalog">
+        <ScrollViewer><StackPanel Spacing="8" Margin="10">
+          <CheckBox IsChecked="{Binding AvailableOnly}" Content="Available items only" />
+          <Button Content="Load catalog" Command="{Binding LoadCatalogCommand}" />
+          <TextBlock Text="{Binding CatalogState}" FontWeight="SemiBold" TextWrapping="Wrap" />
+          <ListBox ItemsSource="{Binding Catalog}" Height="390" />
+        </StackPanel></ScrollViewer>
+      </TabItem>
+      <TabItem Header="Students">
+        <ScrollViewer><StackPanel Spacing="8" Margin="10">
+          <ComboBox ItemsSource="{Binding Students}" SelectedItem="{Binding SelectedStudent}" PlaceholderText="Find a student by number or name" HorizontalAlignment="Stretch" />
+          <Button Content="Clear student form" Command="{Binding NewStudentCommand}" />
+          <TextBox Text="{Binding StudentNumber}" PlaceholderText="Institutional student number" />
+          <TextBox Text="{Binding StudentName}" PlaceholderText="Full name" />
+          <TextBox Text="{Binding Contact}" PlaceholderText="Optional contact" />
+          <WrapPanel Orientation="Horizontal" ItemHeight="36">
+            <Button Content="Register student" Command="{Binding RegisterStudentCommand}" />
+            <Button Content="Update selected student" Command="{Binding UpdateStudentCommand}" />
+            <Button Content="Permit borrowing" Command="{Binding PermitCommand}" />
+            <Button Content="Restrict borrowing" Command="{Binding RestrictCommand}" />
+          </WrapPanel>
+        </StackPanel></ScrollViewer>
+      </TabItem>
+      <TabItem Header="Equipment">
+        <ScrollViewer><StackPanel Spacing="8" Margin="10">
+          <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" PlaceholderText="Find an item by identifier or name" HorizontalAlignment="Stretch" />
+          <Button Content="Clear equipment form" Command="{Binding NewItemCommand}" />
+          <TextBox Text="{Binding ItemCode}" PlaceholderText="Equipment identifier" />
+          <TextBox Text="{Binding ItemName}" PlaceholderText="Equipment name" />
+          <TextBox Text="{Binding Description}" PlaceholderText="Optional description" />
+          <WrapPanel Orientation="Horizontal" ItemHeight="36">
+            <Button Content="Register equipment" Command="{Binding RegisterItemCommand}" />
+            <Button Content="Update selected equipment" Command="{Binding UpdateItemCommand}" />
+          </WrapPanel>
+        </StackPanel></ScrollViewer>
+      </TabItem>
+      <TabItem Header="Checkout">
+        <ScrollViewer><StackPanel Spacing="8" Margin="10">
+          <ComboBox ItemsSource="{Binding Students}" SelectedItem="{Binding Borrower}" PlaceholderText="Choose borrower" HorizontalAlignment="Stretch" />
+          <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding FirstItem}" PlaceholderText="Item 1 · required for either checkout" HorizontalAlignment="Stretch" />
+          <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding SecondItem}" PlaceholderText="Item 2 · required for batch" HorizontalAlignment="Stretch" />
+          <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding ThirdItem}" PlaceholderText="Item 3 · optional for batch" HorizontalAlignment="Stretch" />
+          <TextBlock Text="Expected return date" FontWeight="SemiBold" TextWrapping="Wrap" />
+          <DatePicker SelectedDate="{Binding DueDate}" />
+          <WrapPanel Orientation="Horizontal" ItemHeight="36">
+            <Button Content="Borrow item 1" Command="{Binding IssueOneCommand}" />
+            <Button Content="Check out selected batch" Command="{Binding IssueBatchCommand}" />
+            <Button Content="Clear checkout" Command="{Binding ClearCheckoutCommand}" />
+          </WrapPanel>
+        </StackPanel></ScrollViewer>
+      </TabItem>
+      <TabItem Header="Borrowings">
+        <ScrollViewer><StackPanel Spacing="8" Margin="10">
+          <WrapPanel Orientation="Horizontal" ItemHeight="36">
+            <Button Content="Active borrowings" Command="{Binding ActiveLoansCommand}" />
+            <Button Content="Retry last list" Command="{Binding RetryLoansCommand}" />
+          </WrapPanel>
+          <TextBox Text="{Binding SearchText}" PlaceholderText="Search student name, student number or equipment name" />
+          <Grid ColumnDefinitions="Auto,*,Auto,*,Auto">
+            <TextBlock Text="Status" VerticalAlignment="Center" Margin="0,0,8,0" />
+            <ComboBox Grid.Column="1" ItemsSource="{Binding StatusOptions}" SelectedItem="{Binding StatusFilter}" />
+            <TextBlock Grid.Column="2" Text="Sort by" VerticalAlignment="Center" Margin="0,0,8,0" />
+            <ComboBox Grid.Column="3" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SortField}" />
+            <CheckBox Grid.Column="4" IsChecked="{Binding Descending}" Content="Descending" />
+          </Grid>
+          <WrapPanel Orientation="Horizontal" ItemHeight="36">
+            <Button Content="Search borrowings" Command="{Binding SearchLoansCommand}" />
+            <Button Content="Clear filters" Command="{Binding ClearSearchCommand}" />
+          </WrapPanel>
+          <ComboBox ItemsSource="{Binding Students}" SelectedItem="{Binding HistoryStudent}" PlaceholderText="Select student for history" HorizontalAlignment="Stretch" />
+          <Button Content="Open student history" Command="{Binding StudentHistoryCommand}" />
+          <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding HistoryItem}" PlaceholderText="Select equipment for history" HorizontalAlignment="Stretch" />
+          <Button Content="Open equipment history" Command="{Binding EquipmentHistoryCommand}" />
+          <TextBlock Text="{Binding LoanState}" FontWeight="SemiBold" TextWrapping="Wrap" />
+          <ListBox ItemsSource="{Binding Loans}" Height="235" SelectedItem="{Binding SelectedLoan}" />
+          <CheckBox IsChecked="{Binding ConfirmReturn}" Content="Confirm return of the selected active loan" />
+          <Button Content="Return selected" Command="{Binding ReturnSelectedCommand}" />
+        </StackPanel></ScrollViewer>
+      </TabItem>
+    </TabControl>
+  </Grid>
 </Window>
